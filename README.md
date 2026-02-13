@@ -1,5 +1,8 @@
 # ANN Engine – A Minimal Neural Network Training Framework from Scratch
 
+ <img src="ann_engine.png" alt="Missing Value Count Plot" width="800">
+
+
 ## OverView
 ANN Engine is a lightweight neural network training framework built from scratch using NumPy.
 
