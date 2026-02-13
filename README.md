@@ -4,7 +4,6 @@
  <img src="ann_engine.png" alt="Missing Value Count Plot" width="600">
  </p>
 
-
 ## OverView
 ANN Engine is a lightweight neural network training framework built from scratch using NumPy.
 
