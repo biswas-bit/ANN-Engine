@@ -1,6 +1,6 @@
 # ANN Engine – A Minimal Neural Network Training Framework from Scratch
 
- <img src="ann_engine.png" alt="Missing Value Count Plot" width="800">
+ <img src="ann_engine.png" alt="Missing Value Count Plot" width="500">
 
 
 ## OverView
