@@ -7,7 +7,7 @@ name = "ann-engine"
 version = "0.1.0"
 description = "Neural Network framework built from scratch using NumPy"
 authors = [
-  { name="Biswas" }
+  { name="Biswas pokhrel" }
 ]
 dependencies = [
   "numpy"
