@@ -10,7 +10,7 @@ class Tensor:
         if isinstance(other,Tensor):
             return Tensor(self.data + other.data, (self, other), '+')
     
-    def __mul_(self, other):
+    def __mul__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.data * other.data, (self, other), '*')
     
