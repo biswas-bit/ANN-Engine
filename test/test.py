@@ -1,6 +1,10 @@
 from ann_engine.core.tensor import Tensor
 
-x = Tensor([1])
-y = Tensor([2])
-z = x * 5
-print(z)
+a = Tensor(2.0)
+b = Tensor(3.0)
+c = Tensor(4.0)
+d = a*b+c*b+a
+
+print("d:",d)
+print(d._prev)
+print(d._op)
