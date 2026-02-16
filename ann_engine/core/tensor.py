@@ -18,6 +18,16 @@ class Tensor:
             other.grad += out.grad * 1.0
         out._backward = _backward
         return out
+    
+    def __sub__(self, other):
+        other = other if isinstance(other,Tensor) else Tensor(other)
+        out = Tensor(self.data - other.data, (self, other), '-')
+        
+        def _backward():
+            self.grad +=out.grad *1.0
+            other.grad += out.grad*(-1.0)
+        out._backward = _backward
+        return out
 
     def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
