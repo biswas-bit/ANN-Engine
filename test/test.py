@@ -5,4 +5,9 @@ b = Tensor(3.0)
 c = Tensor(4.0)
 d = a*b+c*b+a
 
-print(d.grad)
+d.backward()
+
+print("d:", d)
+print("a.grad:", a.grad) 
+print("b.grad:", b.grad)  
+print("c.grad:", c.grad)  
