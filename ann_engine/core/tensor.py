@@ -6,7 +6,16 @@ class Tensor:
         self.grad = 0.0
         self._prev = set(_children)
         self._op = _op
-        self._backward = lambda: None  
+        self._backward = lambda: None 
+        
+    def sum(self):
+        out = Tensor(self.data.sum(), (self,), 'sum')
+        
+        def _backward():
+            self.grad += out.grad * np.ones_like(self.data)
+        out._backward = _backward
+        return out
+     
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
