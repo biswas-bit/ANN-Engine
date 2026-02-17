@@ -38,6 +38,11 @@ class Tensor:
             other.grad += self.data * out.grad
         out._backward = _backward
         return out
+    
+    def __truediv__(self, other):
+        other = other if isinstance(other, other) else Tensor(other)
+        out = Tensor(self.data / other.data, (self, other), '/')
+        return out
 
     def backward(self):
         # Topological sort of nodes to handle dependencies
