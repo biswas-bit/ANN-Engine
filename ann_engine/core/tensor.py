@@ -25,6 +25,15 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    def reshape(self, *shape):
+        out = Tensor(self.data.reshape(shape), (self,), 'reshape')
+        
+        def _backward():
+            self.grad += out.grad.reshape(self.data.shape)
+            
+        out._backward = _backward
+        return out
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
