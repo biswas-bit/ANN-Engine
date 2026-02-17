@@ -48,6 +48,15 @@ class Tensor:
             other.grad +=(-self.data/(other.data**2))*out.grad
         out._backward = _backward
         return out
+    
+    def __pow__(self, power):
+        assert isinstance(power,(int, float)), "Only supports int or float powers"
+        out = Tensor(self.data ** power, (self,), f'**{power}')
+        
+        def _backward():
+            self.grad += (power * self.data ** (power -1))* out.grad
+        out._backward = _backward
+        return out
 
     def backward(self):
         # Topological sort of nodes to handle dependencies
