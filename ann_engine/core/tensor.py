@@ -34,6 +34,16 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    @property
+    def T(self):
+        out = Tensor(self.data.T, (self,), 'T')
+        
+        def _backward():
+            self.grad += out.grad.T 
+        
+        out._backward = _backward
+        return out
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
