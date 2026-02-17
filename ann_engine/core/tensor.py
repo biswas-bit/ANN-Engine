@@ -42,6 +42,11 @@ class Tensor:
     def __truediv__(self, other):
         other = other if isinstance(other, other) else Tensor(other)
         out = Tensor(self.data / other.data, (self, other), '/')
+        
+        def _backward():
+            self.grad +=(1.0/other.data)*out.grad
+            other.grad +=(-self.data/(other.data**2))*out.grad
+        out._backward = _backward
         return out
 
     def backward(self):
