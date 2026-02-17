@@ -66,6 +66,17 @@ class Tensor:
             self.grad += (power * self.data ** (power -1))* out.grad
         out._backward = _backward
         return out
+    
+    def __matmul__(self, other):
+        other = other if isinstance(other, Tensor) else Tensor(other)
+        out = Tensor(self.data @ other.data, (self, other), '@')
+        
+        def _backward():
+            self.grad += out.grad @ other.data.T
+            other.grad += self.data.T @ out.grad
+        out._backward = _backward
+        return out
+    
 
     def backward(self):
         # Topological sort of nodes to handle dependencies
