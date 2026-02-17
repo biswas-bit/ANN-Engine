@@ -10,70 +10,79 @@ class Tensor:
         
     def sum(self):
         out = Tensor(self.data.sum(), (self,), 'sum')
-        
         def _backward():
             self.grad += out.grad * np.ones_like(self.data)
+            
         out._backward = _backward
         return out
      
+     
+    def mean(self):
+        n_elements = self.data.size
+        out = Tensor(self.data.mean(), (self,), 'mean')
+        def _backward():
+            self.grad += np.ones_like(self.data) * (out.grad / n_elements)
+            
+        out._backward = _backward
+        return out
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data + other.data, (self, other), '+')
-
-        # backward function
+        
         def _backward():
             self.grad += out.grad * 1.0
             other.grad += out.grad * 1.0
+            
         out._backward = _backward
         return out
     
     def __sub__(self, other):
         other = other if isinstance(other,Tensor) else Tensor(other)
         out = Tensor(self.data - other.data, (self, other), '-')
-        
         def _backward():
             self.grad +=out.grad *1.0
             other.grad += out.grad*(-1.0)
+            
         out._backward = _backward
         return out
 
     def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data * other.data, (self, other), '*')
-
         def _backward():
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
+            
         out._backward = _backward
         return out
     
     def __truediv__(self, other):
         other = other if isinstance(other, other) else Tensor(other)
         out = Tensor(self.data / other.data, (self, other), '/')
-        
         def _backward():
             self.grad +=(1.0/other.data)*out.grad
             other.grad +=(-self.data/(other.data**2))*out.grad
+            
         out._backward = _backward
         return out
     
     def __pow__(self, power):
         assert isinstance(power,(int, float)), "Only supports int or float powers"
         out = Tensor(self.data ** power, (self,), f'**{power}')
-        
         def _backward():
             self.grad += (power * self.data ** (power -1))* out.grad
+            
         out._backward = _backward
         return out
     
     def __matmul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data @ other.data, (self, other), '@')
-        
         def _backward():
             self.grad += out.grad @ other.data.T
             other.grad += self.data.T @ out.grad
+            
         out._backward = _backward
         return out
     
