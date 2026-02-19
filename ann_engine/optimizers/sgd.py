@@ -8,9 +8,7 @@ class SGD(Optimizer):
     def step(self):
         for param in self.parameters:
             if param.grad is not None:
-                # Ensure grad has the same shape as data
                 if param.grad.shape != param.data.shape:
-                    # If grad is scalar but data is not, expand grad
                     if param.grad.shape == () and param.data.shape != ():
                         param.grad = np.ones_like(param.data) * param.grad
                     else:
@@ -19,5 +17,5 @@ class SGD(Optimizer):
                     
     def zero_grad(self):
         for param in self.parameters:
-            # Reset gradients to zeros with the same shape as data
+          
             param.grad = np.zeros_like(param.data)
