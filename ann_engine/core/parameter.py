@@ -1,10 +1,6 @@
 from .tensor import Tensor
 
 class Parameter(Tensor):
-    """ 
-    Trainable tensor
-    used for weights and biases inside layers
-    """
-    def __init__(self, data, required_grad=True):
+    """A Parameter is a Tensor that should be optimized"""
+    def __init__(self, data):
         super().__init__(data)
-        self.required_grad = required_grad
