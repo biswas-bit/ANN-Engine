@@ -1,13 +1,24 @@
-from ann_engine.core.parameter import Parameter
-from ann_engine.layers.base import Module
 import numpy as np
+from ann_engine.core.parameter import Parameter
+from ann_engine.optimizers.sgd import SGD
 
-class DummyLayer(Module):
-    def __init__(self):
-        super().__init__()
-        self.w = Parameter(np.array([[1.,2.],
-                                     [3.,4]]))
-        self.b = Parameter(np.array([1., 2.]))
-layer = DummyLayer()
-params = layer.parameters()
-print(params)
+
+W = Parameter(np.array([[2.0, 3.0],
+                        [4.0, 5.0]]))
+
+loss = (W * 2).sum()
+
+
+loss.backward()
+
+print("Before step:")
+print("W.data:\n", W.data)
+print("W.grad:\n", W.grad)
+
+
+optimizer = SGD([W], lr=0.1)
+
+optimizer.step()
+
+print("\nAfter step:")
+print("W.data:\n", W.data)
