@@ -108,13 +108,37 @@ I followed four core principles:
 The system is inspired by modern deep learning engines but implemented from scratch for educational clarity and control.
 
 ### 1.3  Step-by-step Approach
-#### step1 Tensor as a Data + Gradient Container
-Each **Tensor** stores:
+#### step1: Tensor as a Data + Gradient Container
+ Each **Tensor** stores:
 - **data** -> NUmpy array (float32)
 - **grad** -> same shape as data
 - **_prev** -> Parent tensors (for graph tracking)
 - **_op** -> Operation label
 - **_backward** -> Local gradient function
 This allows every tensor to act as a node in a computational graph.
+---
+#### step2: Dynamic Computational Graph
+ whenever an operation is performed
+ ```python
+  z = x+y
+  ```
+ we :
+ - 1. Compute forward value
+ - 2. Create a new Tensor
+ - 3. Store references to parent tensors
+ - 4. Define a **_backward()** function
+ This builds a Direct Acyclic Graph (DAG) dynamically during execution
+
+ graph example
+ ``` python
+  x ----\
+        (+) ---- z
+y ----/
+```
+No static graph. The graph is created as python executes.
+
+#### Step3: Local Gradient Defination
+
+
 
 
