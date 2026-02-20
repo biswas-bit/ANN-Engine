@@ -167,18 +167,18 @@ No static graph. The graph is created as python executes.
  - 2. Initialize output Gradient
       if scaler loss: 
 
-      $ dL/dL = 1$
+      $dL/dL = 1$
 
  - 3. Reverse Traversal
       we apply chain rule in reverse order: 
 
-      $ dL/dx = dL/dZ * dz/dx $
+      $dL/dx = dL/dZ * dz/dx$
 
  This accumulate gradients correctly
 
  ---
- 
-   
+
+
 
 
 
