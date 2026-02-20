@@ -178,6 +178,9 @@ No static graph. The graph is created as python executes.
 
  ---
 
+### 1.2 Bradcasting Support
+
+
 
 
 
