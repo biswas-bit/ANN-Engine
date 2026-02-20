@@ -90,4 +90,15 @@ ann-engine/
     └── test_optimizers.py
 
 ```
-## Tensor
+## 1. Tensor (Design Approach)
+### 1.1 Core Objective
+The goal of the **Tensor** class in ANN ENGINE is to:
+ - store numerial data
+ - Track gradients
+ - Build a dynamic computation graph
+ - Enable reverse-mode automatic differentiation
+This makes gradient-based optimization possible for neural networks.
+
+
+
+
