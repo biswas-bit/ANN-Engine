@@ -136,6 +136,7 @@ This allows every tensor to act as a node in a computational graph.
 y ----/
 ```
 No static graph. The graph is created as python executes.
+---
 
 #### Step3: Local Gradient Defination
 
