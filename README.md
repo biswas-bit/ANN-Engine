@@ -107,6 +107,14 @@ I followed four core principles:
 - 4. Gradient Accumulation
 The system is inspired by modern deep learning engines but implemented from scratch for educational clarity and control.
 
-
+### 1.3  Step-by-step Approach
+#### step1 Tensor as a Data + Gradient Container
+Each **Tensor** stores:
+- **data** -> NUmpy array (float32)
+- **grad** -> same shape as data
+- **_prev** -> Parent tensors (for graph tracking)
+- **_op** -> Operation label
+- **_backward** -> Local gradient function
+This allows every tensor to act as a node in a computational graph.
 
 
