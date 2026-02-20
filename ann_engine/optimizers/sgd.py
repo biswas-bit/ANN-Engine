@@ -19,3 +19,24 @@ class SGD(Optimizer):
         for param in self.parameters:
           
             param.grad = np.zeros_like(param.data)
+            
+            
+class SGDWithMomentum(SGD):
+    def __init__(self, parameters, lr=0.01, momentum=0.9):
+        super().__init__(parameters, lr)
+        self.momentum = momentum
+        self.velocities = [np.zeros_like(param.data) for param in parameters]
+        
+    def step(self):
+        for i, param in enumerate(self.parameters):
+            if param.grad is not None:
+                if param.grad.shape != param.data.shape:
+                    if param.grad.shape == () and param.data.shape !=():
+                        param.grad = np.ones_like(param.data)*param.grad
+                    else:
+                        raise ValueError(f"Gradient shape {param.grad.shape} doesn't match data shape {param.data.shape}")
+                self.velocities[i] = self.momentum * self.velocities[i] + self.lr * param.grad
+                param.data -= self.velocities[i]
+    
+    def zero_grad(self):
+        return super().zero_grad()
