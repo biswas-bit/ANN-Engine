@@ -99,6 +99,14 @@ The goal of the **Tensor** class in ANN ENGINE is to:
  - Enable reverse-mode automatic differentiation
 This makes gradient-based optimization possible for neural networks.
 
+### 1.2 Design Philosophy
+I followed four core principles:
+- 1. Dynamic Graph Construction
+- 2. Reverse-mode Autodiff
+- 3. Local Gradient Storage
+- 4. Gradient Accumulation
+The system is inspired by modern deep learning engines but implemented from scratch for educational clarity and control.
+
 
 
 
