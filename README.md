@@ -140,7 +140,7 @@ No static graph. The graph is created as python executes.
 
 #### Step3: Local Gradient Defination
  Each operation defines its own derivative rule
- 
+
  Example:
 
  For multiplication: 
@@ -153,6 +153,8 @@ No static graph. The graph is created as python executes.
   $dz/dy = x$
 
  Each atensor knows how to propagate gradients to its parents.
+
+ ---
 
 
 
