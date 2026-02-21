@@ -51,7 +51,6 @@ class Tensor:
         def _backward():
             # Handle broadcasting for self
             if self.data.shape != out.data.shape:
-                # Sum over broadcasted dimensions
                 axis = tuple(range(len(out.grad.shape) - len(self.data.shape)))
                 self.grad += out.grad.sum(axis=axis)
             else:
@@ -66,6 +65,10 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    def __radd__(self, other):
+        """Handle reverse addition (e.g., 5 + tensor)"""
+        return self + other
     
     def __sub__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
@@ -87,6 +90,10 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    def __rsub__(self, other):
+        """Handle reverse subtraction (e.g., 5 - tensor)"""
+        return Tensor(other) - self
 
     def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
@@ -113,6 +120,10 @@ class Tensor:
         out._backward = _backward
         return out
     
+    def __rmul__(self, other):
+        """Handle reverse multiplication (e.g., 5 * tensor)"""
+        return self * other
+    
     def __truediv__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data / other.data, (self, other), '/')
@@ -138,6 +149,10 @@ class Tensor:
         out._backward = _backward
         return out
     
+    def __rtruediv__(self, other):
+        """Handle reverse division (e.g., 5 / tensor)"""
+        return Tensor(other) / self
+    
     def __pow__(self, power):
         assert isinstance(power, (int, float)), "Only supports int or float powers"
         out = Tensor(self.data ** power, (self,), f'**{power}')
@@ -146,6 +161,10 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    def __rpow__(self, other):
+        """Handle reverse power (e.g., 2 ** tensor) - not commonly used"""
+        raise NotImplementedError("Reverse power not implemented")
     
     def __matmul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
@@ -156,8 +175,19 @@ class Tensor:
             
         out._backward = _backward
         return out
+    
+    def __rmatmul__(self, other):
+        """Handle reverse matrix multiplication"""
+        return Tensor(other) @ self
 
-    def backward(self):
+    def backward(self, retain_graph=False):
+        """
+        Backpropagate gradients through the computation graph.
+        
+        Args:
+            retain_graph (bool): If True, keep the graph for additional backward passes.
+                                If False, free the graph after backward pass.
+        """
         # Topological sort of nodes to handle dependencies
         topo = []
         visited = set()
@@ -178,8 +208,12 @@ class Tensor:
         # Traverse nodes in reverse topological order
         for t in reversed(topo):
             t._backward()
+            
+        # If not retaining graph, clear the computation graph to free memory
+        if not retain_graph:
+            for t in topo:
+                t._prev = set()
 
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad})"
-
 
