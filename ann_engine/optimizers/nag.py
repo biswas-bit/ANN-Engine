@@ -21,3 +21,21 @@ class NAG(Optimizer):
     
     def zero_grad(self):
         super().zero_grad()
+        
+    
+    def state_dict(self):
+        """Return optimizer state for saving/loading"""
+        return {
+            'velocities': self.velocities,
+            'hyperparameters': {
+                'lr': self.lr,
+                'momentum': self.momentum
+            }
+        }
+        
+    def load_state_dict(self, state_dict):
+        """Load optimizer state from a state_dict"""
+        self.velocities = state_dict['velocities']
+        hyperparams = state_dict['hyperparameters']
+        self.lr = hyperparams['lr']
+        self.momentum = hyperparams['momentum']
