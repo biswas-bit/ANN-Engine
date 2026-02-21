@@ -3,7 +3,6 @@ from ann_engine.optimizers.base import Optimizer
 
 class Adam(Optimizer):
     def __init__(self, parameters, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
-        # Note: using 'lr' instead of 'learning_rate' to match base class
         super().__init__(parameters, lr)
         self.beta1 = beta1
         self.beta2 = beta2
@@ -46,7 +45,7 @@ class Adam(Optimizer):
             m_hat = self.m[i] / bias_correction1
             v_hat = self.v[i] / bias_correction2
             
-            # Parameter update (using self.lr from base class)
+            # Parameter update 
             param.data -= self.lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
     
     def zero_grad(self):
