@@ -30,13 +30,16 @@ class SGDWithMomentum(SGD):
     def step(self):
         for i, param in enumerate(self.parameters):
             if param.grad is not None:
-                if param.grad.shape != param.data.shape:
-                    if param.grad.shape == () and param.data.shape !=():
-                        param.grad = np.ones_like(param.data)*param.grad
+                grad = param.grad
+                # handle scalar broadcast
+                if grad.shape != param.data.shape:
+                    if grad.shape == () and param.data.shape != ():
+                        grad = np.ones_like(param.data) * grad
                     else:
-                        raise ValueError(f"Gradient shape {param.grad.shape} doesn't match data shape {param.data.shape}")
-                self.velocities[i] = self.momentum * self.velocities[i] + self.lr * param.grad
+                        raise ValueError(f"Gradient shape {grad.shape} doesn't match data shape {param.data.shape}")
+                # update velocity
+                self.velocities[i] = self.momentum * self.velocities[i] + self.lr * grad
                 param.data -= self.velocities[i]
-    
+
     def zero_grad(self):
-        return super().zero_grad()
+        super().zero_grad()
