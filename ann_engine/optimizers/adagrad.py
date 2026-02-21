@@ -5,7 +5,6 @@ class AdaGrad(Optimizer):
     def __init__(self, parameters, lr=0.01, epsilon=1e-8):
         super().__init__(parameters, lr)
         self.epsilon = epsilon
-        # Initialize sum of squares for each parameter
         self.G = [np.zeros_like(p.data) for p in self.parameters]
 
     def step(self):
@@ -13,7 +12,7 @@ class AdaGrad(Optimizer):
             if param.grad is None:
                 continue
 
-            # Ensure gradient shape matches
+            # Ensure gradient shape matches parameter shape
             if param.grad.shape != param.data.shape:
                 raise ValueError(
                     f"Gradient shape {param.grad.shape} "
