@@ -1,5 +1,6 @@
 import numpy as np
 from ann_engine.optimizers.base import Optimizer
+import copy
 
 class Adam(Optimizer):
     def __init__(self, parameters, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
@@ -52,3 +53,30 @@ class Adam(Optimizer):
         """Reset gradients to zero"""
         for param in self.parameters:
             param.grad = np.zeros_like(param.data)
+            
+    def state_dict(self):
+        """ Return optimizer state for saving/loading """
+        return {
+            'm': [m_i.copy() for m_i in self.m],  # Use copy() method
+            'v': [v_i.copy() for v_i in self.v],  # Use copy() method
+            't': self.t,
+            'hyperparameters': {
+                'lr': self.lr,
+                'beta1': self.beta1,
+                'beta2': self.beta2,
+                'epsilon': self.epsilon
+            }
+        }
+        
+    def load_state_dict(self, state_dict):
+        """ Load optimizer state """
+        self.m = [m_i.copy() for m_i in state_dict['m']]  
+        self.v = [v_i.copy() for v_i in state_dict['v']]  
+        self.t = state_dict['t']
+        
+        if 'hyperparameters' in state_dict:
+            hyperparams = state_dict['hyperparameters']
+            self.lr = hyperparams['lr']
+            self.beta1 = hyperparams['beta1']
+            self.beta2 = hyperparams['beta2']
+            self.epsilon = hyperparams['epsilon']
