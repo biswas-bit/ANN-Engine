@@ -4,6 +4,8 @@ import numpy as np
 
 w = Parameter(np.array([0.0]))
 optimizers = NAG([w], lr=0.1, momentum=0.9)
+print(f"w:{w.grad}")
+print(f"optimizers velocity:{optimizers. velocities[0]}")
 
 for step in range(5):
     optimizers.zero_grad()
