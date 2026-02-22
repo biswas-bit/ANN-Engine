@@ -150,3 +150,37 @@ class BCEWithLogitsLoss(Loss):
         
         return self._reduce(loss)
     
+
+class HuberLoss(Loss):
+    """ Huber Loss for regression """
+    def __init__(self, reduction = 'mean', delta=1.0):
+        super().__init__(reduction)
+        self.delta = delta
+        
+    def forward(self, y_pred, y_true):
+        """
+        Compute Huber Loss
+        0.5 * (y_pred - y_true)^2 if |y_pred - y_true| <= delta
+        delta * (|y_pred - y_true| - 0.5 * delta^2) otherwise
+        
+        Args:
+            y_pred: Tensor of Predictions
+            y_true: Tensor of targets
+        
+        returns:
+           Tensor Loss Value 
+        """
+        
+        if not isinstance(y_true, Tensor):
+            y_true = Tensor(y_true)
+        
+        diff = y_pred -y_true
+        abs_diff = np.abs(diff)
+        
+        #quadratic loss for small errors, linear loss for large errors
+        quadratic = np.minimum(abs_diff, self.delta)
+        linear = abs_diff - quadratic
+        loss = 0.5 * quadratic **2 + self.delta * linear
+        
+        return self._reduce(loss)
+        
