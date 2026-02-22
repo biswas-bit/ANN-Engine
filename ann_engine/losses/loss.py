@@ -21,12 +21,21 @@ class MSELoss(Loss):
         if not isinstance(y_true, Tensor):
             y_true = Tensor(y_true)
         
-        # Compute squared error
+    
         diff = y_pred - y_true
         squared_error = diff ** 2
         
-        return self._reduce(squared_error)
-    
+        # Apply reduction
+        if self.reduction == 'mean':
+            n_elements = np.prod(y_pred.data.shape)
+            loss_value = squared_error.sum() / n_elements
+            return loss_value
+        elif self.reduction == 'sum':
+            return squared_error.sum()
+        elif self.reduction == 'none':
+            return squared_error
+        else:
+            raise ValueError(f"Invalid reduction type: {self.reduction}")
 
 class CrossEntropyLoss(Loss):
     """Cross Entropy Loss for classification"""
