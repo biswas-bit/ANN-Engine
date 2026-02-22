@@ -123,3 +123,30 @@ class BCELoss(Loss):
         
         return self._reduce(loss)
     
+
+class BCEWithLogitsLoss(Loss):
+    """ Binary Cross Entropy Loss with Logits"""
+    def __init__(self, reduction='mean'):
+        super().__init__(reduction)
+        
+    def forward(self, y_pred, y_true):
+        """
+        Compute BCE with logits loss:
+        max(x, 0) - x * z + log(1 + exp(-abs(x)))
+        
+        Args:
+            y_pred: Tensor of Predictions (logits)
+            y_true: Tensor of targets (0 or 1)
+            
+        Returns:
+            Tensor Loss value
+        """
+        if not isinstance(y_true, Tensor):
+            y_true = Tensor(y_true)
+        
+        # compute BCE with logits loss
+        loss = np.maximum(y_pred.data, 0) - y_pred.data * y_true.data + np.log(1 + np.exp(-np.abs(y_pred.data)))
+        loss = Tensor(loss)
+        
+        return self._reduce(loss)
+    
