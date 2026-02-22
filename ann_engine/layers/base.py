@@ -1,31 +1,47 @@
-class Module:
-    """ Base Class for all neural network modules """
-    
+# ann_engine/layers/base.py
+from abc import ABC, abstractmethod
+from ann_engine.core import Parameter
+
+class Module(ABC):
     def __init__(self):
-        self._parameters = {}
-        self._modules = {}
-        
-    def forward(self,*inputs):
-        raise NotImplementedError("Forward method not implemented")
+        self._parameters = []
+        self.training = True
     
-    def __call__(self, *inputs):
-        return self.forward(*inputs)
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
     
-    def __setattr__(self, name, value):
-        from ann_engine.core.parameter import Parameter
-        from ann_engine.layers.base import Module
-        
-        if isinstance(value, Parameter):
-            self._parameters[name] = value
-        
-        elif isinstance(value, Module):
-            self._modules[name] = value
-            
-        super().__setattr__(name, value)
-        
+    @abstractmethod
+    def forward(self, *args, **kwargs):
+        pass
+    
     def parameters(self):
-        params = list(self._parameters.values())
-        for module in self._modules.values():
-            params.extend(module.parameters())
-        
+        """Return list of all parameters in the module"""
+        params = []
+        for attr in dir(self):
+            obj = getattr(self, attr)
+            if isinstance(obj, Parameter):
+                params.append(obj)
+            elif isinstance(obj, Module):
+                params.extend(obj.parameters())
         return params
+    
+    def train(self):
+        """Set module to training mode"""
+        self.training = True
+        for child in self.children():
+            child.train()
+    
+    def eval(self):
+        """Set module to evaluation mode"""
+        self.training = False
+        for child in self.children():
+            child.eval()
+    
+    def children(self):
+        """Return child modules"""
+        children = []
+        for attr in dir(self):
+            obj = getattr(self, attr)
+            if isinstance(obj, Module):
+                children.append(obj)
+        return children
