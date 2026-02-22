@@ -65,3 +65,30 @@ class CrossEntropyLoss(Loss):
 
         return self._reduce(loss)
     
+class NLLLoss(Loss):
+    """ Negative log likelihood loos """
+    
+    def forward(self, y_pred, y_true):
+        """ Compute NLL loss: -y_true * log(y_pred)
+
+        Args:
+            y_pred : Tensor of Predictions (log probabilities)
+            y_true : Tensor of targets 
+            
+        Returns:
+            Tensor loss value
+        """
+        
+        if not isinstance(y_true, Tensor):
+            y_true = Tensor(y_true)
+            
+        # compute NLL Loss
+        if len(y_true.data.shape) == 1 or y_true.data.shape[-1] == 1:
+            loss = -y_pred.data[range(len(y_pred.data)), y_true.data.astype(int)]
+            loss = Tensor(loss)
+        
+        else:
+            loss = -(y_true * y_pred)
+            
+        # Apply reduction
+        return self._reduce(loss)
