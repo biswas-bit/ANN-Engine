@@ -11,7 +11,7 @@ class Loss(ABC):
     def forward(self, y_pred, y_true):
         pass
     
-    def _reduct(self, loss):
+    def _reduce(self, loss):
         """ Apply reduction to the loss value"""
         if self.reduction == 'mean':
             return loss.mean(loss)
