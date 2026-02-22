@@ -92,3 +92,34 @@ class NLLLoss(Loss):
             
         # Apply reduction
         return self._reduce(loss)
+    
+
+class BCELoss(Loss):
+    """ Binary Cross Entropy Loss"""
+    def __init__(self, reduction = 'mean', epsilon=1e-12):
+        super().__init__(reduction)
+        self.epsilion  = epsilon
+        
+    def forward(self, y_pred, y_true):
+        """
+        Compute binary cross entropy loss:
+        -[y_true * log(y_pred) + (1 - y_true)* log(1 - y_pred)]
+        
+        Args:
+            y_pred: Tensor of Predictions (probabilities between 0 and 1)
+            y_true: Tensor of targets (0 or 1)
+             
+        Returns:
+            Tensor Loss value
+        """
+        if not isinstance(y_true, Tensor):
+            y_true = Tensor(y_true)
+            
+            #clipping predictions to avoid log(0)
+            y_pred_clipped = y_pred.__class__(np.clip(y_pred.data, self.epsilion, 1-self.epsilion))
+            
+            # computing binary cross entropy loss
+            loss = -(y_true * y_pred_clipped.log() + (1 - y_true) * (1 - y_pred_clipped).log())
+        
+        return self._reduce(loss)
+    
