@@ -15,17 +15,10 @@ class Loss(ABC):
     
     def _reduce(self, loss):
         """Apply reduction to the loss value"""
-        if not isinstance(loss, Tensor):
-            loss = Tensor(loss)
-        
         if self.reduction == 'mean':
-            # Use loss.data for shape information
+            # Use loss.data.shape to get the shape as a tuple of integers
             n_elements = np.prod(loss.data.shape)
-            if n_elements == 1:
-                return loss
-            else:
-                sum_loss = loss.sum()
-                return Tensor(sum_loss.data / n_elements)
+            return loss.sum() / n_elements
         elif self.reduction == 'sum':
             return loss.sum()
         elif self.reduction == 'none':
