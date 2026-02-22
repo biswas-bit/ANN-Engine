@@ -72,22 +72,44 @@ class Tensor:
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data + other.data, (self, other), '+')
-        
+    
         def _backward():
-            # Handle broadcasting for self
+            # Handle gradient for self
             if self.data.shape != out.data.shape:
-                axis = tuple(range(len(out.grad.shape) - len(self.data.shape)))
-                self.grad += out.grad.sum(axis=axis)
-            else:
-                self.grad += out.grad
-                
-            # Handle broadcasting for other
-            if other.data.shape != out.data.shape:
-                axis = tuple(range(len(out.grad.shape) - len(other.data.shape)))
-                other.grad += out.grad.sum(axis=axis)
-            else:
-                other.grad += out.grad
+                # Sum over broadcasted dimensions
+                axis_to_sum = []
+                for i, (dim_self, dim_out) in enumerate(zip(self.data.shape, out.data.shape)):
+                    if dim_self != dim_out:
+                        axis_to_sum.append(i)
             
+                if axis_to_sum:
+                    # Keep dimensions to allow broadcasting back
+                    grad_self = out.grad.sum(axis=tuple(axis_to_sum), keepdims=True)
+                    # Remove extra dimensions if needed
+                    grad_self = grad_self.reshape(self.data.shape)
+                else:
+                    grad_self = out.grad
+            else:
+                grad_self = out.grad
+        
+            # Handle gradient for other
+            if other.data.shape != out.data.shape:
+                axis_to_sum = []
+                for i, (dim_other, dim_out) in enumerate(zip(other.data.shape, out.data.shape)):
+                    if dim_other != dim_out:
+                        axis_to_sum.append(i)
+            
+                if axis_to_sum:
+                    grad_other = out.grad.sum(axis=tuple(axis_to_sum), keepdims=True)
+                    grad_other = grad_other.reshape(other.data.shape)
+                else:
+                    grad_other = out.grad
+            else:
+                grad_other = out.grad
+        
+            self.grad += grad_self
+            other.grad += grad_other
+        
         out._backward = _backward
         return out
     
