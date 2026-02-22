@@ -16,14 +16,39 @@ class Tensor:
         out._backward = _backward
         return out
      
-    def mean(self):
-        n_elements = self.data.size
-        out = Tensor(self.data.mean(), (self,), 'mean')
-        def _backward():
-            self.grad += np.ones_like(self.data) * (out.grad / n_elements)
-            
-        out._backward = _backward
-        return out
+    def mean(self, axis=None, keepdims=False):
+       """
+       Compute mean of tensor elements along specified axis.
+    
+       Args:
+           axis: Axis or axes along which to compute mean
+           keepdims: If True, reduced dimensions are kept
+    
+       Returns:
+           Tensor with mean value(s)
+       """
+       if axis is None:
+        # Global mean (scalar output)
+           out = Tensor(self.data.mean(), (self,), 'mean')
+           def _backward():
+               self.grad += np.ones_like(self.data) * (out.grad / self.data.size)
+           out._backward = _backward
+           return out
+       else:
+        # Mean along specific axis
+           out = Tensor(self.data.mean(axis=axis, keepdims=keepdims), (self,), 'mean')
+           def _backward():
+               # For axis-wise mean, we need to handle broadcasting correctly
+               grad = out.grad / self.data.shape[axis]
+               # Expand grad to original shape
+               expand_shape = list(self.data.shape)
+               if not keepdims:
+                   # Insert back the reduced dimension
+                   expand_shape.insert(axis if axis >= 0 else len(expand_shape), 1)
+               grad = grad.reshape(expand_shape)
+               self.grad += np.broadcast_to(grad, self.data.shape)
+           out._backward = _backward
+           return out
     
     def reshape(self, *shape):
         out = Tensor(self.data.reshape(shape), (self,), 'reshape')
