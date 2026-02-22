@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import numpy as np
+from ann_engine.core.tensor import Tensor
 
 class Loss(ABC):
     def __init__(self, reduction='mean'):
@@ -12,14 +14,14 @@ class Loss(ABC):
         pass
     
     def _reduce(self, loss):
-        """ Apply reduction to the loss value"""
+        """Apply reduction to the loss value"""
         if self.reduction == 'mean':
-            return loss.mean(loss)
+            # Use loss.data.shape to get the shape as a tuple of integers
+            n_elements = np.prod(loss.data.shape)
+            return loss.sum() / n_elements
         elif self.reduction == 'sum':
-            return loss.sum(loss)
+            return loss.sum()
         elif self.reduction == 'none':
             return loss
         else:
-            raise ValueError(f"invalid reduction type: {self.reduction}")
-        
-    
+            raise ValueError(f"Invalid reduction type: {self.reduction}")
