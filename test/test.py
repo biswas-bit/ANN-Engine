@@ -3,7 +3,7 @@ from ann_engine.core import Tensor, Parameter
 
 # Regression data
 y_true = Tensor([1.0, 2.0, 3.0])
-y_pred = Parameter([1.5, 2.5, 3.5])  # Use Parameter for gradients
+y_pred = Parameter([1.5, 2.5, 3.5]) 
 
 try:
     loss_fn = MSELoss(reduction='mean')
