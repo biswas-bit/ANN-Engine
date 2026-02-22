@@ -57,8 +57,8 @@ class Adam(Optimizer):
     def state_dict(self):
         """ Return optimizer state for saving/loading """
         return {
-            'm': [m_i.copy() for m_i in self.m],  # Use copy() method
-            'v': [v_i.copy() for v_i in self.v],  # Use copy() method
+            'm': [m_i.copy() for m_i in self.m], 
+            'v': [v_i.copy() for v_i in self.v],  
             't': self.t,
             'hyperparameters': {
                 'lr': self.lr,
