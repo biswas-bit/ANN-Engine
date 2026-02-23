@@ -329,3 +329,45 @@ class softplus(Module):
         return f" Softplus (beta={self.beta})"
             
         
+class swish(Module):
+   """
+   swish activation function : f(x) = x * sigmoid(x) 
+   """
+   
+   def __init__(self, beta=1.0):
+       super().__init__()
+       self.beta = beta
+       self.cache = None
+       
+   def forward(self, x):
+       """
+       forward pass ; swish(x) = x * sigmoid(beta * x)
+       
+       Args:
+         x: Input Tensor
+         
+       Returns:
+         Tensor with swish applied
+         
+       """
+       beta_x = self.beta * x.data
+       sigmoid = 1 /(1 + np.exp(-beta_x))
+       
+       self.cache = (x.data, sigmoid)
+       out_data = x.data * sigmoid
+       out = Tensor(out_data, (x,), 'Swish')
+    
+       def _backward():
+          x_data, sig = self.cache
+          # Gradient : sigmoid + x* sigmoid * (1- sigmoid)
+          grad = out.grad * (sig + x_data * sig * (1-sig))
+          x.grad += grad
+       out._backward = _backward
+       return out
+   
+   def __repr__(self):
+       return f"Swish(beta = {self.beta})"
+   
+   
+
+   
