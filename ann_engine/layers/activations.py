@@ -111,6 +111,43 @@ class Tanh(Module):
     
     def __repr__(self):
         return "Tanh()"
+
+
+class LeakyReLU(Module):
+    """
+    Leaky Rectified Linear Unit activation function
+    f(x) = x if x>0 , alpha * x otherwise
     
+    """
+    def __init__(self):
+        super().__init__()
+        self.cache = None
+        
+    def forward(self, x):
+        """
+        forward pass :
+        LeakyReLU(x) = max(alpha*x, x) 
+
+        Args:
+            x : Input Tensor
+            
+        Returns:
+           Tensor with LeakyReLU applied
+           
+        """
+        
+        self.cache = x
+        out_data = np.where(x.data > 0 , x.data, self.alpha * x.data)
+        out = Tensor(out_data, (x,), 'LeakyReLU')
+        
+        def _backward():
+            # Grdient: 1 where x > 0 , alpha otherwise
+            mask = np.where(self.cache.data > 0, 1.0, self.alpha)
+            self.cache.grad += out.grad * mask
+        out._backward = _backward
+        return out
     
+    def __repr__(self):
+        return f"LeakyReLU (alpha = {self.alpha})"
     
+
