@@ -35,4 +35,39 @@ class Relu(Module):
     def __repr__(self):
         return "ReLU"
     
+class Sigmoid(Module):
+    """
+    Sigmoid Activation Function
+    f(x) = 1/(1 + exp(-x))
+    
+    """
+    def __init__(self):
+        super().__init__()
+        self.cache = None
+        
+    def forward(self, x):
+        """
+        Forward pass : Sigmoid(x) = 1/(1 - exp(-x))
+
+        Args:
+            x : Input Tensor
+            
+        Returns:
+            Tensor with sigmoid applied
+            
+        """
+        
+        out_data = 1 /(1 + np.exp(-x.data))
+        out = Tensor(out_data, (x,), "Sigmoid")
+        self.cache = out_data
+        
+        def _backward():
+            grad = out.grad * (self.cache * (1-self.cache))
+            x.grad += grad
+        out._backward = _backward
+        return out
+    
+    def __repr__(self):
+        return "Sigmoid()"
+    
     
