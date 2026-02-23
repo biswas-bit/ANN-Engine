@@ -151,3 +151,50 @@ class LeakyReLU(Module):
         return f"LeakyReLU (alpha = {self.alpha})"
     
 
+class ELU(Module):
+    """
+    Exponential Linear Unit activation function
+    f(x) = x if x> 0, alpha*(axp(x)-1) otherwise
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.cache = None
+        
+    def forward(self,x):
+        """
+        forward pass : ELU(x)
+        
+        Args:
+           x : Input Tensor
+           
+        Returns:
+         Tensor with ELU
+         
+        """
+        self.cache = x
+        out_data = np.where(
+            x.data > 0,
+            x.data,
+            self.alpha * (np.exp(x.data)-1)
+        )
+        
+        out = Tensor(out_data, (x,), 'ELU')
+        
+        def _backward():
+              # Gradient: 1 where x > 0, alpha * exp(x) elsewhere
+              grad = np.where(
+                  self.cache.data > 0,
+                  1.0,
+                  self.alpha * np.exp(self.cache.data))
+              self.cache.grad += out.grad * grad
+              
+        out._backward = _backward
+        return out
+    
+    def __repr__(self):
+        return f"ELU(alpha={self.alpha})"
+    
+
+        
+        
