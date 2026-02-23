@@ -196,5 +196,53 @@ class ELU(Module):
         return f"ELU(alpha={self.alpha})"
     
 
+class Softmax(Module):
+    """
+    softmax activation function for multi-class classification
+    f(x_i) = exp(X_i) / sum(exp(x_j)) for all j
+    
+    """
+    
+    def __init__(self, dim=1):
+        super().__init__()
+        self.dim = dim
+        self.cache = None
         
+    def forward(self,x):
+        """Forward pass : softmax along specfied dimension
+
+        Args:
+            x : Input Tensor
+            
+        Returns:
+           Tensor with softmax applied
+           
+        """
+        # shift for numerical stability (subtract max)
+        x_shifted = x.data - np.max(x.data, axis=self.dim, keepdims=True)
+        exp_x = np.exp(x_shifted)
+        
+        # compute softmax
+        out_data  = exp_x / np.sum(exp_x, axis=self.dim, keepdims=True)
+        out = Tensor(out_data, (x,), 'Softmax')
+        
+        self.cache = out_data
+        
+        def _backward():
+            # jacobian is more complex, but for cross-entropy loss,
+            # the gradient simplifies . This is a general implementation.
+            
+            batch_size = out_data.shape[0]
+            grad = out.grad.copy()
+            
+            for i in range(batch_size):
+                s = out[i].reshape(-1,1)
+                jacobian = np.diagflat(s) - np.dot(s, s.T)
+                grad[i] = grad[i].reshape(1,-1) @ jacobian
+            x.grad += grad.reshape(x.data.shape)
+            out._backward = _backward
+            return out
+        
+        def __repr__(self):
+            return f"Softmax(dim={self.dim})"
         
