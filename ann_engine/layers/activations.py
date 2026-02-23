@@ -246,3 +246,42 @@ class Softmax(Module):
         def __repr__(self):
             return f"Softmax(dim={self.dim})"
         
+class Logsoftmax(Module):
+    """
+      Log Softmax activation function
+      log(softmax(x)) - more numerically stable
+    """
+    
+    def __init__(self, dim=-1):
+        super().__init__()
+        self.dim = dim
+        self.cache = None 
+        
+    def forward(self,x):
+        """
+        forward Pass : log(softmax(x))
+
+        Args:
+            x : Input Tensor
+        
+        Returns:
+            Tensor with log softmax applied 
+        """
+        self.cache = x
+        x_shifted = x.data - np.max(x.data, axis=self.dim, keepdims=True)
+        
+        out_data = x_shifted - np.log(np.sum(np.exp(x_shifted), axis=self.dim, keepdim=True))
+        out = Tensor(out_data, (x,), 'LogSoftmax')
+        
+        def _backward():
+            # Gradient simplifies to : 1- softmax(x)
+            exp_x = np.exp(x.data - np.max(x.data, axis=self.dim, keepdims=True))
+            softmax = exp_x / np.sum(exp_x, axis=self.dim, keepdim=True)
+            
+            # Gradient of log softmax
+            grad = out.grad - np.sum(out.grad * softmax, axis=self.dim, keepdims=True)
+            x.grad += grad
+        out._backward = _backward
+        return out
+            
+        
