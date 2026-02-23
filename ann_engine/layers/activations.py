@@ -283,5 +283,47 @@ class Logsoftmax(Module):
             x.grad += grad
         out._backward = _backward
         return out
+    
+class softplus(Module):
+    """
+      softplus activation function : f(x) = log(1+ exp(x))
+      smooth approximation of ReLU
+      
+    """
+    def __init__(self, bets=1.0 , threshold=20.0):
+        super().__init__()
+        self.beta = self.beta
+        self.threshold = threshold
+        self.cache = None
+        
+    def forward(self, x):
+        """
+        forward pass : softplus(x)
+        
+        Args:
+           x: Input Tensor
+           
+        Returns:
+           Tensor with softplus applied
+            
+        """
+        
+        self.cache = x
+        beta_x = self.beta * x.data 
+        out_data = np.where (
+            beta_x > self.threshold,
+            beta_x,
+            np.log(1 + np.exp(beta_x))
+        ) / self.beta
+        
+        out = Tensor(out_data, (x,), 'softplus')
+        
+        def _backward():
+            beta_x = self.beta * self.cache.data
+            sigmoid = 1/(1 + np.exp(-beta_x))
+            self.cache.grad += out.grad * sigmoid
+        out._backward = _backward
+        return out
+        
             
         
