@@ -325,5 +325,7 @@ class softplus(Module):
         out._backward = _backward
         return out
         
+    def __repr__(self):
+        return f" Softplus (beta={self.beta})"
             
         
