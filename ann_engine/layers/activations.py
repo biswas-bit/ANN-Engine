@@ -27,6 +27,7 @@ class Relu(Module):
         out = Tensor(out_data, (x,),'ReLU')
         
         def _backward():
+             # Gradient: 1 where x > 0, 0 elsewhere
             mask = (self.cache.data > 0).astype(np.float32)
             self.cache.grad += out.grad * mask
         out._backward = _backward
@@ -34,6 +35,7 @@ class Relu(Module):
     
     def __repr__(self):
         return "ReLU"
+    
     
 class Sigmoid(Module):
     """
@@ -62,6 +64,8 @@ class Sigmoid(Module):
         self.cache = out_data
         
         def _backward():
+             # Gradient: sigmoid(x) * (1 - sigmoid(x))
+             
             grad = out.grad * (self.cache * (1-self.cache))
             x.grad += grad
         out._backward = _backward
@@ -69,5 +73,44 @@ class Sigmoid(Module):
     
     def __repr__(self):
         return "Sigmoid()"
+    
+    
+class Tanh(Module):
+    """
+    Hyperbolic Tangent activation function
+    f(x) = tanh(x)
+    
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.cache = None
+        
+    def forward(self,x):
+        """
+        forward pass : tanh(x)
+        
+        Args:
+            X: Input Tensor
+            
+        Returns:
+            Tensor with tanh applied
+        """ 
+        out_data = np.tanh(x.data)
+        out = Tensor(out_data, (x,), 'Tanh')
+        
+        self.cache = out_data
+        
+        def _backward():
+            
+           # Gradient: 1 - tanh^2(x)
+           grad = out.grad * (1-self.cache**2)
+           x.grad += grad
+        out._backward = _backward
+        return out
+    
+    def __repr__(self):
+        return "Tanh()"
+    
     
     
