@@ -1,8 +1,8 @@
 import numpy as np
-from ann_engine.layers import ReLU, Sigmoid, Tanh, LeakyReLU
+from ann_engine.layers import ReLU, Sigmoid, Tanh, LeakyReLU, ELU
 from ann_engine.core import Tensor
 
-Lr = LeakyReLU(alpha=0.10)
+Lr = ELU(alpha=0.10)
 try:
   input_for_lr = Tensor(np.array([1.2,1.3, 1.4, 1.5]))
 except Exception as e:
