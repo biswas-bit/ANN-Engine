@@ -68,9 +68,32 @@ def test_relu_forward_basic():
     print("computation graph build correct")
     return True
 
+def relu_test_forward_2d():
+    print("Testing  forward pass with 2d input...")
+    relu = ReLU()
+    
+    x_data = np.array([
+        [-1.0, -0.5, 0.0, 0.5],
+        [1.0, 1.5, -2.0, -1.0],
+        [0.0, -3.0, 4.0, 5.0]
+    ])
+    
+    x = Tensor(x_data)
+    out = relu(x)
+    expected = np.maximum(0, x_data)
+    print(f" Input shape: {x_data.shape}")
+    print(f" Output shape: {out.data.shape}")
+    print(f" sample output:n\n{out.data}")
+    
+    assert out.data.shape == x_data.shape, f"Shape mismatch: {out.data.shape} vs {x_data.shape}"
+    assert np.allclose(out.data, expected), "OutPut doesn't match expected"
+    print(" 2d forward pass correct")
+    return True
+
 def main():
     tests = [
-        ('Forward Pass Basic',test_relu_forward_basic)
+        ('Forward Pass Basic',test_relu_forward_basic),
+        ('Forward pass Batch', relu_test_forward_2d),
     ]
     
     passed =0
