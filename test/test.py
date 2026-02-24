@@ -179,6 +179,55 @@ def test_relu_computation_graph():
     
     return True
     
+def test_relu_edge_cases():
+    print("Testing ReLU edge cases...")
+    
+    relu = ReLU()
+    x_large = Parameter(np.array([1e6, -1e6, 1e-6, -1e-6]))
+    out_large = relu(x_large)
+    loss_large = out_large.sum()
+    loss_large.backward()
+    
+    print(f"  Large values input: {x_large.data}")
+    print(f"  Output: {out_large.data}")
+    print(f"  Gradients: {x_large.grad}")
+    
+    expected_output = np.array([1e6, 0, 1e-6, 0])
+    expected_grad = np.array([1.0, 0.0, 1.0, 0.0])
+    
+    assert np.allclose(out_large.data, expected_output), "Large value output incorrect"
+    assert np.allclose(x_large.grad, expected_grad), "Large value gradients incorrect"
+    print(" Edge cases handled correctly")
+    
+    return True
+
+def test_relu_multiple_uses():
+    """Test 8: Same ReLU instance used multiple times"""
+    print("Testing ReLU instance used multiple times...")
+    
+    relu = ReLU()
+    
+    x1 = Parameter(np.array([-1.0, 0.0, 1.0]))
+    x2 = Parameter(np.array([-2.0, 2.0, -3.0]))
+    
+    # Use same ReLU instance twice
+    out1 = relu(x1)
+    out2 = relu(x2)
+    
+    loss = out1.sum() + out2.sum()
+    loss.backward()
+    
+    print(f"  x1 gradients: {x1.grad}")
+    print(f"  x2 gradients: {x2.grad}")
+    
+    expected_grad_x1 = np.array([0.0, 0.0, 1.0])
+    expected_grad_x2 = np.array([0.0, 1.0, 0.0])
+    
+    assert np.allclose(x1.grad, expected_grad_x1), "x1 gradients incorrect"
+    assert np.allclose(x2.grad, expected_grad_x2), "x2 gradients incorrect"
+    print("  ✓ Multiple uses of same ReLU instance works")
+    
+    return True
     
 def main():
     tests = [
@@ -188,6 +237,8 @@ def main():
         ('Backward with loss',  test_relu_backward_with_loss),
         ('Backward test with 2d', test_relu_backward_2d),
         ('Testing Computation graph',test_relu_computation_graph),
+        ('Edge Case Test',test_relu_edge_cases),
+        ('multiple Uses Test',test_relu_multiple_uses),
     ]
     
     passed =0
