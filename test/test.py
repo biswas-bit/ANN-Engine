@@ -22,7 +22,7 @@ def run_test(test_name, test_func):
     
     try:
         result = test_func()
-        print("\n Test Passed : {test_name}")
+        print(f"\n Test Passed : {test_name}")
         return True, result
     except AssertionError as e:
         print(f"\n test failed (Assertion Error): {test_name}")
@@ -42,5 +42,82 @@ def run_test(test_name, test_func):
         return False , None
     
 
-        
-        
+def test_relu_forward_basic():
+    """ Test 1: Basic Relu forward pass """
+    print("Testing basic ReLU forward pass")
+    
+    relu = ReLU()
+    print(f"ReLU instance: {relu}")
+    
+    # Test with positive, negative, and Zero
+    x_data = np.array([-2.0, -1.0, 0.0, 1.0, 2.0])
+    x = Tensor(x_data)
+    out = relu(x)
+    
+    # expected result
+    expected = np.array([0.0, 0.0,0.0, 1.0, 2.0])
+    
+    print(f"Input: {x_data}")
+    print(f"output: {out.data}")
+    print(f" Expected : {expected}")
+    
+    assert np.allclose(out.data, expected), f"Expected {expected}, got {out.data}"
+    assert out._op == "ReLU", f"Expected op 'ReLU', got {out._op}"
+    assert x in out._prev, "Input should be computation graph"
+    print("forward pass correct")
+    print("computation graph build correct")
+    return True
+
+def main():
+    tests = [
+        ('Forward Pass Basic',test_relu_forward_basic)
+    ]
+    
+    passed =0
+    failed =0
+    failed_tests = []
+    for test_name, test_func in tests:
+        success, _ = run_test(test_name, test_func)
+        if success:
+            passed +=1
+        else:
+            failed +=1
+            failed_tests.append(test_name)
+    
+    print("\n" + "=" * 50)
+    print("TEST SUMMARY - RELU")
+    print("=" * 50)
+    print(f"Total Test : {len(tests)}")
+    print(f"passed: {passed}")
+    print(f"failed : {failed}")
+    
+    if failed_tests:
+        print("\n Failed tests:")
+        for test in failed_tests:
+            print(f"=>{test}")
+    
+    print("\n" + "=" * 50)
+    
+    if failed == 0:
+        print("\n ALL RELU TESTS PASSED")
+        print("ReLU Implementation is working correctly")
+    
+    else:
+        print(f"\n => {failed} Tests Failed. Check the erros above.")
+        print("The Programme paused after each error so you can see what happened")
+    
+    print("\n" + "=" * 50)
+    input("\nPress Enter to exit...") 
+    
+    
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nTests interrupted by user.")
+        input("\nPress Enter to exit...")
+    
+    except Exception as e:
+        print(f"\n Unexpected error in main : {e}")
+        traceback.print_exc()
+        input("\npress enter to exit")
