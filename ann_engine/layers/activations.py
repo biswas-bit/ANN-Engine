@@ -10,7 +10,9 @@ class ReLU(Module):
     
     def __init__(self):
         super().__init__()
-        self.cache = None  # Store input for backward pass
+        # Store cache for each forward pass
+        self.cache = {}
+        self.forward_count = 0
     
     def forward(self, x):
         """
@@ -22,17 +24,19 @@ class ReLU(Module):
         Returns:
             Tensor with ReLU applied
         """
-        # Store input for backward pass
-        self.cache = x
+        # Store input for this forward pass
+        cache_id = self.forward_count
+        self.forward_count += 1
         
         # Apply ReLU: max(0, x)
         out_data = np.maximum(0, x.data)
         out = Tensor(out_data, (x,), 'ReLU')
         
-        def _backward():
+        def _backward(cache_id=cache_id):
+            # Get the input for this specific forward pass
             # Gradient: 1 where x > 0, 0 elsewhere
-            mask = (self.cache.data > 0).astype(np.float32)
-            self.cache.grad += out.grad * mask
+            mask = (x.data > 0).astype(np.float32)
+            x.grad += out.grad * mask
         
         out._backward = _backward
         return out
