@@ -125,12 +125,37 @@ def test_relu_backward_with_loss():
     assert np.allclose(x.grad, expected_grad), f"Expected {expected_grad}, got {x.grad}"
     print("  ✓ Backward pass with loss.backward() correct")
     return True
+
+def test_relu_backward_2d():
+    print("Testing ReLU backward pass with 2D input...")
+    relu = ReLU()
+    x_data = np.array([
+        [-1.0, -0.5, 0.0, 0.5],
+        [1.0, 1.5, -2.0, -1.0],
+        [0.0, -3.0, 4.0, 5.0]
+    ])
+    x = Parameter(x_data)
+    out = relu(x)
+    loss = out.sum()
+    loss.backward()
+    expected_grad = (x_data > 0).astype(np.float32)
+    print(f"  Input shape: {x_data.shape}")
+    print(f"  Output shape: {out.data.shape}")
+    print(f"  Computed gradients shape: {x.grad.shape}")
+    print(f"  Sample gradients:\n{x.grad}")
+    assert x.grad.shape == x_data.shape, f"Gradient shape mismatch: {x.grad.shape} vs {x_data.shape}"
+    assert np.allclose(x.grad, expected_grad), "Gradients don't match expected"
+    print("2D backward pass correct")
+    
+    return True
     
 def main():
     tests = [
         ('Forward Pass Basic',test_relu_forward_basic),
         ('Forward pass Batch', relu_test_forward_2d),
         ('Backward pass for basic',test_relu_backward_basic),
+        ('Backward with loss',  test_relu_backward_with_loss),
+        ('Backward test with 2d', test_relu_backward_2d),
     ]
     
     passed =0
