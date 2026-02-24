@@ -148,6 +148,37 @@ def test_relu_backward_2d():
     print("2D backward pass correct")
     
     return True
+
+def test_relu_computation_graph():
+    print("Testing ReLU computation graph...")
+    
+    relu = ReLU()
+    
+    x = Tensor(np.array([-1.0, 0.0, 1.0]))
+    y = Tensor(np.array([2.0, 2.0, 2.0]))
+    
+    out = relu(x) + y
+    print(f"  Input x: {x.data}")
+    print(f"  Input y: {y.data}")
+    print(f"  Output: {out.data}")
+    print(f"  Output operation: {out._op}")
+    print(f"  Output parents: {[id(p) for p in out._prev]}")
+    
+    assert out._op == '+', "Output should be from addition"
+    
+    # Find the ReLU node in the graph
+    relu_node = None
+    for child in out._prev:
+        if child._op == 'ReLU':
+            relu_node = child
+            break
+    
+    assert relu_node is not None, "ReLU node not found in computation graph"
+    assert x in relu_node._prev, "Input x should be parent of ReLU node"
+    print("Computation graph built correctly")
+    
+    return True
+    
     
 def main():
     tests = [
@@ -156,6 +187,7 @@ def main():
         ('Backward pass for basic',test_relu_backward_basic),
         ('Backward with loss',  test_relu_backward_with_loss),
         ('Backward test with 2d', test_relu_backward_2d),
+        ('Testing Computation graph',test_relu_computation_graph),
     ]
     
     passed =0
