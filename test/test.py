@@ -1,20 +1,47 @@
+# test_relu_simple.py
 import numpy as np
-from ann_engine.layers import ReLU, Sigmoid, Tanh, LeakyReLU, ELU, Softmax, LogSoftmax, Softplus,Swish, GELU, Identity
-from ann_engine.core import Tensor
+from ann_engine.core import Parameter
+from ann_engine.layers import ReLU
 
-Lr = Identity()
-try:
-  input_for_lr = Tensor(np.array([1.2,1.3, 1.4, 1.5]))
-except Exception as e:
-    print(f"error occoured : {e}")
+def test_relu():
+    """Simple ReLU test"""
+    print("=" * 50)
+    print("TESTING RELU ACTIVATION")
+    print("=" * 50)
     
-try:
-  print(Lr.forward(input_for_lr))
-  input_for_lr.backward()
-  print(f" gradient for relu Activation: {input_for_lr.grad}")
-  print(f" parent note for gradient : {input_for_lr._prev}")
-  print(f" Operator for Relu in computation graph: {input_for_lr._op} ")
-except Exception as e:
-    print(f"error occoured: {e}")
+    try:
+        # Create ReLU
+        relu = ReLU()
+        print(f"1. Created ReLU: {relu}")
+        
+        # Test data
+        x = Parameter(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
+        print(f"\n2. Input: {x.data}")
+        
+        # Forward pass
+        out = relu(x)
+        print(f"3. Output: {out.data}")
+        print(f"   Expected: [0. 0. 0. 1. 2.]")
+        
+        # Backward pass
+        loss = out.sum()
+        loss.backward()
+        print(f"\n4. Gradients: {x.grad}")
+        print(f"   Expected: [0. 0. 0. 1. 1.]")
+        
+        # Verify
+        assert np.allclose(out.data, [0, 0, 0, 1, 2]), "Forward pass wrong"
+        assert np.allclose(x.grad, [0, 0, 0, 1, 1]), "Backward pass wrong"
+        
+        print("\n✅ ALL TESTS PASSED!")
+        
+    except Exception as e:
+        print(f"\n❌ ERROR: {e}")
+        import traceback
+        traceback.print_exc()
     
-input("press enter to exit...")
+    print("\n" + "=" * 50)
+    input("Press Enter to exit...")
+
+if __name__ == "__main__":
+    test_relu()
