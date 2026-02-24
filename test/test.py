@@ -90,10 +90,29 @@ def relu_test_forward_2d():
     print(" 2d forward pass correct")
     return True
 
+def test_relu_backward_basic():
+    print("Testing ReLU backward pass with basic value...")
+    relu = ReLU()
+    x = Tensor(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
+    out = relu(x)
+    out.grad = np.ones_like(out.data)
+    out._backward()
+    expected_grad = np.array([0.0, 0.0, 0.0, 1.0, 1.0])
+    print(f"  Input: {x.data}")
+    print(f"  Output: {out.data}")
+    print(f"  Computed gradients: {x.grad}")
+    print(f"  Expected gradients: {expected_grad}")
+    
+    assert np.allclose(x.grad, expected_grad), f"Expected {expected_grad}, got {x.grad}"
+    print("  ✓ Backward pass correct")
+    
+    return True
+
 def main():
     tests = [
         ('Forward Pass Basic',test_relu_forward_basic),
         ('Forward pass Batch', relu_test_forward_2d),
+        ('Backward pass for basic',test_relu_backward_basic),
     ]
     
     passed =0
