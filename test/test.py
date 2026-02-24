@@ -108,6 +108,24 @@ def test_relu_backward_basic():
     
     return True
 
+def test_relu_backward_with_loss():
+    print("Testing ReLU backward pass with loss.backward()...")
+    relu = ReLU()
+    x = Parameter(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
+    out = relu(x)
+    loss = out.sum()
+    loss.backward()
+    expected_grad = np.array([0.0, 0.0, 0.0, 1.0, 1.0])
+    print(f"  Input: {x.data}")
+    print(f"  Output: {out.data}")
+    print(f"  Loss: {loss.data}")
+    print(f"  Computed gradients: {x.grad}")
+    print(f"  Expected gradients: {expected_grad}")
+    
+    assert np.allclose(x.grad, expected_grad), f"Expected {expected_grad}, got {x.grad}"
+    print("  ✓ Backward pass with loss.backward() correct")
+    return True
+    
 def main():
     tests = [
         ('Forward Pass Basic',test_relu_forward_basic),
