@@ -1,47 +1,46 @@
-# test_relu_simple.py
 import numpy as np
-from ann_engine.core import Parameter
-from ann_engine.layers import ReLU
+import sys
+import traceback
 
-def test_relu():
-    """Simple ReLU test"""
-    print("=" * 50)
-    print("TESTING RELU ACTIVATION")
-    print("=" * 50)
+def pause_on_error():
+    print("\n" + "=" * 60 )
+    input("Press Enter to continue after error...")
+    
+
+try:
+    from ann_engine.core import Tensor, Parameter
+    from ann_engine.layers import ReLU
+except ImportError as e:
+    print(f"Falied to Import lbraries : {e}")
+    pause_on_error()
+    sys.exit(1)
+    
+def run_test(test_name, test_func):
+    print(f"\n" + "=" * 50)
+    print(f"Running test : {test_name}")
+    print(f"\n" + "=" * 50)
     
     try:
-        # Create ReLU
-        relu = ReLU()
-        print(f"1. Created ReLU: {relu}")
-        
-        # Test data
-        x = Parameter(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
-        print(f"\n2. Input: {x.data}")
-        
-        # Forward pass
-        out = relu(x)
-        print(f"3. Output: {out.data}")
-        print(f"   Expected: [0. 0. 0. 1. 2.]")
-        
-        # Backward pass
-        loss = out.sum()
-        loss.backward()
-        print(f"\n4. Gradients: {x.grad}")
-        print(f"   Expected: [0. 0. 0. 1. 1.]")
-        
-        # Verify
-        assert np.allclose(out.data, [0, 0, 0, 1, 2]), "Forward pass wrong"
-        assert np.allclose(x.grad, [0, 0, 0, 1, 1]), "Backward pass wrong"
-        
-        print("\n✅ ALL TESTS PASSED!")
-        
-    except Exception as e:
-        print(f"\n❌ ERROR: {e}")
-        import traceback
+        result = test_func()
+        print("\n Test Passed : {test_name}")
+        return True, result
+    except AssertionError as e:
+        print(f"\n test failed (Assertion Error): {test_name}")
+        print(f" {e}")
+        print("\n" + "-" * 50)
         traceback.print_exc()
+        pause_on_error()
+        return False , None
     
-    print("\n" + "=" * 50)
-    input("Press Enter to exit...")
+    
+    except Exception as e:
+        print('\n Test  Failed (Exception): {test_name}')
+        print(f" {e}")
+        print("\n" + "-" * 50)
+        traceback.print_exc()
+        pause_on_error()
+        return False , None
+    
 
-if __name__ == "__main__":
-    test_relu()
+        
+        
