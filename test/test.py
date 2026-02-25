@@ -265,20 +265,63 @@ def test_elu_edge_cases():
     # Test with various values
     x_large = Parameter(np.array([100.0, -100.0, 10.0, -10.0]))
     out_large = elu(x_large)
-    loss_large = out_large.sum()
-    loss_large.backward()
     
     print(f"Large values input: {x_large.data}")
     print(f"Output: {out_large.data}")
+    
+    # For large positive x, output ≈ x
+    # For large negative x, output ≈ -alpha (since exp(-100) ≈ 0, so alpha*(0-1) = -alpha)
+    # But note: exp(-10) is not exactly 0, it's a very small number
+    expected_output = np.array([
+        100.0,                    # 100 > 0, so output = 100
+        -alpha,                    # -100: alpha*(exp(-100)-1) ≈ alpha*(0-1) = -alpha
+        10.0,                      # 10 > 0, so output = 10
+        alpha * (np.exp(-10.0) - 1) # -10: exact calculation
+    ])
+    
+    print(f"Expected output: {expected_output}")
+    
+    # Check large positive
+    assert np.allclose(out_large.data[0], expected_output[0]), f"Large positive: got {out_large.data[0]}, expected {expected_output[0]}"
+    
+    # Check large negative (should be close to -alpha)
+    assert np.allclose(out_large.data[1], -alpha, rtol=1e-3), f"Large negative: got {out_large.data[1]}, expected ~{-alpha}"
+    
+    # Check medium positive
+    assert np.allclose(out_large.data[2], 10.0), f"Medium positive: got {out_large.data[2]}, expected 10.0"
+    
+    # Check medium negative (exact calculation)
+    assert np.allclose(out_large.data[3], alpha * (np.exp(-10.0) - 1)), f"Medium negative incorrect"
+    
+    print("✓ Forward pass edge cases correct")
+    
+    # Now test backward pass
+    loss_large = out_large.sum()
+    loss_large.backward()
+    
     print(f"Gradients: {x_large.grad}")
     
-    # For large positive x, output ≈ x, gradient ≈ 1
-    # For large negative x, output ≈ -alpha, gradient ≈ 0 (since exp(-100) ≈ 0)
-    expected_output = np.array([100.0, -1.0, 10.0, -1.0])
-    expected_grad = np.array([1.0, 0.0, 1.0, 0.0])
+    # Expected gradients:
+    # For large positive: 1.0
+    # For large negative: alpha * exp(-100) ≈ 0
+    # For medium positive: 1.0
+    # For medium negative: alpha * exp(-10)
+    expected_grad = np.array([
+        1.0,                          # x=100: gradient = 1
+        alpha * np.exp(-100.0),        # x=-100: gradient ≈ 0
+        1.0,                          # x=10: gradient = 1
+        alpha * np.exp(-10.0)          # x=-10: exact gradient
+    ])
     
-    assert np.allclose(out_large.data, expected_output, rtol=1e-3), "Large value output incorrect"
-    assert np.allclose(x_large.grad, expected_grad, rtol=1e-3), "Large value gradients incorrect"
+    print(f"Expected gradients: {expected_grad}")
+    
+    # Check gradients with appropriate tolerances
+    assert np.allclose(x_large.grad[0], 1.0), f"Gradient for large positive: got {x_large.grad[0]}, expected 1.0"
+    assert np.allclose(x_large.grad[1], 0.0, atol=1e-10), f"Gradient for large negative: got {x_large.grad[1]}, expected ~0"
+    assert np.allclose(x_large.grad[2], 1.0), f"Gradient for medium positive: got {x_large.grad[2]}, expected 1.0"
+    assert np.allclose(x_large.grad[3], alpha * np.exp(-10.0)), f"Gradient for medium negative incorrect"
+    
+    print("✓ Backward pass edge cases correct")
     print("✓ Edge cases handled correctly")
     
     return True
@@ -451,21 +494,20 @@ def test_elu_multiple_uses():
 
 def main():
     tests = [
-        ('Forward Pass Basic', test_elu_forward_basic),
-        ('Forward Pass Custom Alpha', test_elu_forward_custom_alpha),
-        ('Forward Pass 2D', test_elu_forward_2d),
-        ('Backward Pass Basic', test_elu_backward_basic),
-        ('Backward Pass Custom Alpha', test_elu_backward_custom_alpha),
-        ('Backward with Loss', test_elu_backward_with_loss),
-        ('Backward Pass 2D', test_elu_backward_2d),
-        ('Computation Graph', test_elu_computation_graph),
-        ('Edge Cases', test_elu_edge_cases),
-        ('ELU Properties', test_elu_properties),
-        ('Different Alphas', test_elu_different_alphas),
-        ('Numerical Stability', test_elu_numerical_stability),
-        ('Multiple Uses', test_elu_multiple_uses),
-    ]
-    
+    ('Forward Pass Basic', test_elu_forward_basic),
+    ('Forward Pass Custom Alpha', test_elu_forward_custom_alpha),
+    ('Forward Pass 2D', test_elu_forward_2d),
+    ('Backward Pass Basic', test_elu_backward_basic),
+    ('Backward Pass Custom Alpha', test_elu_backward_custom_alpha),
+    ('Backward with Loss', test_elu_backward_with_loss),
+    ('Backward Pass 2D', test_elu_backward_2d),
+    ('Computation Graph', test_elu_computation_graph),
+    ('Edge Cases', test_elu_edge_cases),  
+    ('ELU Properties', test_elu_properties),
+    ('Different Alphas', test_elu_different_alphas),
+    ('Numerical Stability', test_elu_numerical_stability),
+    ('Multiple Uses', test_elu_multiple_uses),
+]
     passed = 0
     failed = 0
     failed_tests = []
