@@ -189,6 +189,10 @@ class ELU(Module):
     def __repr__(self):
         return f"ELU(alpha={self.alpha})"
 
+import numpy as np
+from ann_engine.core import Tensor
+from ann_engine.layers.base import Module
+
 class Softmax(Module):
     """
     Softmax activation function for multi-class classification
@@ -230,26 +234,25 @@ class Softmax(Module):
         out_data = exp_x / sum_exp
         out = Tensor(out_data, (x,), 'Softmax')
         
-        # Store dimension for this specific forward pass
-        # IMPORTANT: Capture the current values, not the instance variables
-        current_dim = self.dim
+        # Store the input and output for this specific forward pass
+        # We need to attach them to the output tensor itself
+        out._saved_for_backward = {
+            'x': x,
+            'softmax_output': out_data,
+            'dim': self.dim
+        }
         
-        def _backward(original_x=x, original_out=out, dim=current_dim):
-            """
-            Backward pass for softmax.
+        def _backward():
+            # Retrieve saved values
+            saved = out._saved_for_backward
+            x_tensor = saved['x']
+            s = saved['softmax_output']
+            dim = saved['dim']
             
-            The Jacobian of softmax is:
-            J_ij = s_i * (δ_ij - s_j)
-            where s_i is the i-th output of softmax and δ_ij is Kronecker delta
-            
-            This gives: dx_i = sum_j (grad_j * s_i * (δ_ij - s_j))
-                             = s_i * (grad_i - sum_j(grad_j * s_j))
-            """
-            if original_out.grad is None:
+            if out.grad is None:
                 return
             
-            s = original_out.data  # Softmax output
-            grad = original_out.grad  # Gradient from upstream
+            grad = out.grad
             
             # Compute gradient for input
             # dx = s * (grad - sum(grad * s, axis=dim, keepdims=True))
@@ -261,7 +264,7 @@ class Softmax(Module):
             dx = s * (grad - sum_grad_s)
             
             # Accumulate gradient
-            original_x.grad += dx
+            x_tensor.grad += dx
         
         out._backward = _backward
         return out

@@ -309,42 +309,66 @@ def test_softmax_computation_graph():
     return True
 
 
-def test_softmax_multiple_calls():
-    """Test 10: Multiple calls to same Softmax instance"""
-    print("Testing multiple calls...")
+def test_softmax_multiple_calls_simple():
+    """Simplified test for multiple calls"""
+    print("Testing multiple calls (simplified)...")
     
     softmax = Softmax()
     
+    # Create two different inputs
     x1 = Parameter(np.array([[1.0, 2.0, 3.0]]))
     x2 = Parameter(np.array([[4.0, 5.0, 6.0]]))
     
+    print(f"\nInput x1: {x1.data}")
+    print(f"Input x2: {x2.data}")
+    
+    # First forward pass
     out1 = softmax(x1)
+    print(f"out1 data: {out1.data}")
+    
+    # Second forward pass
     out2 = softmax(x2)
+    print(f"out2 data: {out2.data}")
     
-    print(f"x1: {x1.data} -> out1: {out1.data}")
-    print(f"x2: {x2.data} -> out2: {out2.data}")
-    
-    # Calculate expected
-    exp_x1 = np.exp(x1.data - np.max(x1.data))
-    exp_x2 = np.exp(x2.data - np.max(x2.data))
-    expected_out1 = exp_x1 / np.sum(exp_x1)
-    expected_out2 = exp_x2 / np.sum(exp_x2)
-    
-    assert np.allclose(out1.data, expected_out1), "out1 incorrect"
-    assert np.allclose(out2.data, expected_out2), "out2 incorrect"
+    # Verify outputs are different
     assert not np.allclose(out1.data, out2.data), "Outputs should be different"
     
-    # Test backward separately
-    out1.grad = np.ones_like(out1.data)
-    out1.backward()
+    # Calculate expected outputs
+    exp_x1 = np.exp(x1.data - np.max(x1.data))
+    exp_x2 = np.exp(x2.data - np.max(x2.data))
+    expected1 = exp_x1 / np.sum(exp_x1)
+    expected2 = exp_x2 / np.sum(exp_x2)
     
-    out2.grad = np.ones_like(out2.data)
-    out2.backward()
+    print(f"Expected out1: {expected1}")
+    print(f"Expected out2: {expected2}")
     
+    assert np.allclose(out1.data, expected1), "out1 incorrect"
+    assert np.allclose(out2.data, expected2), "out2 incorrect"
+    
+    # Test backward pass for first output
+    print("\nTesting backward for out1...")
+    loss1 = out1.sum()
+    loss1.backward()
+    print(f"x1.grad after out1 backward: {x1.grad}")
+    
+    # Reset gradients for x2 (it should be None or zeros)
+    if x2.grad is not None:
+        x2.grad = np.zeros_like(x2.data)
+    
+    # Test backward pass for second output
+    print("\nTesting backward for out2...")
+    loss2 = out2.sum()
+    loss2.backward()
+    print(f"x2.grad after out2 backward: {x2.grad}")
+    
+    # Verify gradients exist
     assert x1.grad is not None, "x1 should have gradients"
     assert x2.grad is not None, "x2 should have gradients"
     
-    print("✓ Multiple calls work correctly")
+    # Gradients should be different
+    assert not np.allclose(x1.grad, x2.grad), "Gradients should be different"
+    
+    print("\n✓ Multiple calls test passed!")
     return True
 
 
@@ -374,7 +398,7 @@ def main():
         ('Backward with Loss', test_softmax_backward_with_loss),
         ('Softmax Properties', test_softmax_properties),
         ('Computation Graph', test_softmax_computation_graph),
-        ('Multiple Calls', test_softmax_multiple_calls),
+        ('Multiple Calls', test_softmax_multiple_calls_simple),
         ('Invalid Dimension', test_softmax_invalid_dim),
     ]
     
