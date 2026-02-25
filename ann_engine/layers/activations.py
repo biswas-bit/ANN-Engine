@@ -151,7 +151,6 @@ class ELU(Module):
     def __init__(self, alpha=1.0):
         super().__init__()
         self.alpha = alpha
-        self.cache = None  # Store input and output for backward pass
     
     def forward(self, x):
         """
@@ -163,32 +162,32 @@ class ELU(Module):
         Returns:
             Tensor with ELU applied
         """
-        # Store input for backward pass
-        self.cache = x
-        
-        # Apply ELU
+        # Apply ELU with numerical stability
+        # For large negative values, exp(x) underflows to 0, so we clip
+        x_data = x.data
         out_data = np.where(
-            x.data > 0, 
-            x.data, 
-            self.alpha * (np.exp(x.data) - 1)
+            x_data > 0, 
+            x_data, 
+            self.alpha * (np.exp(np.clip(x_data, -50, 50)) - 1)
         )
         out = Tensor(out_data, (x,), 'ELU')
         
-        def _backward():
+        def _backward(original_x=x, original_out=out, alpha=self.alpha):
             # Gradient: 1 where x > 0, alpha * exp(x) elsewhere
+            # Use clipped values for numerical stability
+            x_clipped = np.clip(original_x.data, -50, 50)
             grad = np.where(
-                self.cache.data > 0,
+                original_x.data > 0,
                 1.0,
-                self.alpha * np.exp(self.cache.data)
+                alpha * np.exp(x_clipped)
             )
-            self.cache.grad += out.grad * grad
+            original_x.grad += original_out.grad * grad
         
         out._backward = _backward
         return out
     
     def __repr__(self):
         return f"ELU(alpha={self.alpha})"
-
 
 class Softmax(Module):
     """
