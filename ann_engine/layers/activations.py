@@ -51,10 +51,6 @@ class Sigmoid(Module):
     f(x) = 1 / (1 + exp(-x))
     """
     
-    def __init__(self):
-        super().__init__()
-        self.cache = None  # Store output for backward pass
-    
     def forward(self, x):
         """
         Forward pass: sigmoid(x) = 1 / (1 + exp(-x))
@@ -69,19 +65,13 @@ class Sigmoid(Module):
         out_data = 1 / (1 + np.exp(-x.data))
         out = Tensor(out_data, (x,), 'Sigmoid')
         
-        # Store output for backward pass
-        self.cache = out_data
-        
-        def _backward():
+        def _backward(original_x=x, original_out=out):
             # Gradient: sigmoid(x) * (1 - sigmoid(x))
-            grad = out.grad * (self.cache * (1 - self.cache))
-            x.grad += grad
+            grad = original_out.grad * (original_out.data * (1 - original_out.data))
+            original_x.grad += grad
         
         out._backward = _backward
         return out
-    
-    def __repr__(self):
-        return "Sigmoid()"
 
 
 class Tanh(Module):
