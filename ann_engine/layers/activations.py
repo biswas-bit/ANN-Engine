@@ -80,10 +80,6 @@ class Tanh(Module):
     f(x) = tanh(x)
     """
     
-    def __init__(self):
-        super().__init__()
-        self.cache = None  # Store output for backward pass
-    
     def forward(self, x):
         """
         Forward pass: tanh(x)
@@ -98,13 +94,10 @@ class Tanh(Module):
         out_data = np.tanh(x.data)
         out = Tensor(out_data, (x,), 'Tanh')
         
-        # Store output for backward pass
-        self.cache = out_data
-        
-        def _backward():
+        def _backward(original_x=x, original_out=out):
             # Gradient: 1 - tanh^2(x)
-            grad = out.grad * (1 - self.cache ** 2)
-            x.grad += grad
+            grad = original_out.grad * (1 - original_out.data ** 2)
+            original_x.grad += grad
         
         out._backward = _backward
         return out
