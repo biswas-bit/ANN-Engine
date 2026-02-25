@@ -9,7 +9,7 @@ def pause_on_error():
 
 try:
     from ann_engine.core import Tensor, Parameter
-    from ann_engine.layers import Sigmoid  # Changed to Sigmoid
+    from ann_engine.layers import Tanh  # Changed to Tanh
 except ImportError as e:
     print(f"Failed to Import libraries : {e}")
     pause_on_error()
@@ -40,36 +40,36 @@ def run_test(test_name, test_func):
         return False, None
     
 
-def test_sigmoid_forward_basic():
-    """ Test 1: Basic Sigmoid forward pass """
-    print("Testing basic Sigmoid forward pass")
+def test_tanh_forward_basic():
+    """ Test 1: Basic Tanh forward pass """
+    print("Testing basic Tanh forward pass")
     
-    sigmoid = Sigmoid()
-    print(f"Sigmoid instance: {sigmoid}")
+    tanh = Tanh()
+    print(f"Tanh instance: {tanh}")
     
     # Test with various values
     x_data = np.array([-2.0, -1.0, 0.0, 1.0, 2.0])
     x = Tensor(x_data)
-    out = sigmoid(x)
+    out = tanh(x)
     
-    # Expected result: 1 / (1 + exp(-x))
-    expected = 1 / (1 + np.exp(-x_data))
+    # Expected result: tanh(x)
+    expected = np.tanh(x_data)
     
     print(f"Input: {x_data}")
     print(f"Output: {out.data}")
     print(f"Expected: {expected}")
     
     assert np.allclose(out.data, expected), f"Expected {expected}, got {out.data}"
-    assert out._op == "Sigmoid", f"Expected op 'Sigmoid', got {out._op}"
+    assert out._op == "Tanh", f"Expected op 'Tanh', got {out._op}"
     assert x in out._prev, "Input should be in computation graph"
     print("✓ Forward pass correct")
     print("✓ Computation graph built correctly")
     return True
 
-def test_sigmoid_forward_2d():
-    """ Test 2: Sigmoid forward pass with 2D input """
-    print("Testing Sigmoid forward pass with 2D input...")
-    sigmoid = Sigmoid()
+def test_tanh_forward_2d():
+    """ Test 2: Tanh forward pass with 2D input """
+    print("Testing Tanh forward pass with 2D input...")
+    tanh = Tanh()
     
     x_data = np.array([
         [-1.0, -0.5, 0.0, 0.5],
@@ -78,8 +78,8 @@ def test_sigmoid_forward_2d():
     ])
     
     x = Tensor(x_data)
-    out = sigmoid(x)
-    expected = 1 / (1 + np.exp(-x_data))
+    out = tanh(x)
+    expected = np.tanh(x_data)
     
     print(f"Input shape: {x_data.shape}")
     print(f"Output shape: {out.data.shape}")
@@ -90,25 +90,25 @@ def test_sigmoid_forward_2d():
     print("✓ 2D forward pass correct")
     return True
 
-def test_sigmoid_backward_basic():
-    """ Test 3: Basic Sigmoid backward pass """
-    print("Testing Sigmoid backward pass with basic values...")
-    sigmoid = Sigmoid()
+def test_tanh_backward_basic():
+    """ Test 3: Basic Tanh backward pass """
+    print("Testing Tanh backward pass with basic values...")
+    tanh = Tanh()
     
     x = Tensor(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
-    out = sigmoid(x)
+    out = tanh(x)
     
-    # Sigmoid output for gradient calculation
-    sigmoid_output = out.data
+    # Tanh output for gradient calculation
+    tanh_output = out.data
     
     out.grad = np.ones_like(out.data)
     out._backward()
     
-    # Expected gradient: sigmoid(x) * (1 - sigmoid(x))
-    expected_grad = sigmoid_output * (1 - sigmoid_output)
+    # Expected gradient: 1 - tanh^2(x)
+    expected_grad = 1 - tanh_output ** 2
     
     print(f"Input: {x.data}")
-    print(f"Sigmoid output: {sigmoid_output}")
+    print(f"Tanh output: {tanh_output}")
     print(f"Computed gradients: {x.grad}")
     print(f"Expected gradients: {expected_grad}")
     
@@ -117,22 +117,22 @@ def test_sigmoid_backward_basic():
     
     return True
 
-def test_sigmoid_backward_with_loss():
-    """ Test 4: Sigmoid backward pass with loss.backward() """
-    print("Testing Sigmoid backward pass with loss.backward()...")
-    sigmoid = Sigmoid()
+def test_tanh_backward_with_loss():
+    """ Test 4: Tanh backward pass with loss.backward() """
+    print("Testing Tanh backward pass with loss.backward()...")
+    tanh = Tanh()
     
     x = Parameter(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
-    out = sigmoid(x)
+    out = tanh(x)
     loss = out.sum()
     loss.backward()
     
-    # Expected gradient: sigmoid(x) * (1 - sigmoid(x))
-    sigmoid_output = out.data
-    expected_grad = sigmoid_output * (1 - sigmoid_output)
+    # Expected gradient: 1 - tanh^2(x)
+    tanh_output = out.data
+    expected_grad = 1 - tanh_output ** 2
     
     print(f"Input: {x.data}")
-    print(f"Sigmoid output: {sigmoid_output}")
+    print(f"Tanh output: {tanh_output}")
     print(f"Loss: {loss.data}")
     print(f"Computed gradients: {x.grad}")
     print(f"Expected gradients: {expected_grad}")
@@ -141,10 +141,10 @@ def test_sigmoid_backward_with_loss():
     print("✓ Backward pass with loss.backward() correct")
     return True
 
-def test_sigmoid_backward_2d():
-    """ Test 5: Sigmoid backward pass with 2D input """
-    print("Testing Sigmoid backward pass with 2D input...")
-    sigmoid = Sigmoid()
+def test_tanh_backward_2d():
+    """ Test 5: Tanh backward pass with 2D input """
+    print("Testing Tanh backward pass with 2D input...")
+    tanh = Tanh()
     
     x_data = np.array([
         [-1.0, -0.5, 0.0, 0.5],
@@ -152,13 +152,13 @@ def test_sigmoid_backward_2d():
         [0.0, -3.0, 4.0, 5.0]
     ])
     x = Parameter(x_data)
-    out = sigmoid(x)
+    out = tanh(x)
     loss = out.sum()
     loss.backward()
     
-    # Expected gradient: sigmoid(x) * (1 - sigmoid(x))
-    sigmoid_output = out.data
-    expected_grad = sigmoid_output * (1 - sigmoid_output)
+    # Expected gradient: 1 - tanh^2(x)
+    tanh_output = out.data
+    expected_grad = 1 - tanh_output ** 2
     
     print(f"Input shape: {x_data.shape}")
     print(f"Output shape: {out.data.shape}")
@@ -171,16 +171,16 @@ def test_sigmoid_backward_2d():
     
     return True
 
-def test_sigmoid_computation_graph():
+def test_tanh_computation_graph():
     """ Test 6: Verify computation graph is built correctly """
-    print("Testing Sigmoid computation graph...")
+    print("Testing Tanh computation graph...")
     
-    sigmoid = Sigmoid()
+    tanh = Tanh()
     
     x = Tensor(np.array([-1.0, 0.0, 1.0]))
     y = Tensor(np.array([2.0, 2.0, 2.0]))
     
-    out = sigmoid(x) + y
+    out = tanh(x) + y
     print(f"Input x: {x.data}")
     print(f"Input y: {y.data}")
     print(f"Output: {out.data}")
@@ -189,28 +189,28 @@ def test_sigmoid_computation_graph():
     
     assert out._op == '+', "Output should be from addition"
     
-    # Find the Sigmoid node in the graph
-    sigmoid_node = None
+    # Find the Tanh node in the graph
+    tanh_node = None
     for child in out._prev:
-        if child._op == 'Sigmoid':
-            sigmoid_node = child
+        if child._op == 'Tanh':
+            tanh_node = child
             break
     
-    assert sigmoid_node is not None, "Sigmoid node not found in computation graph"
-    assert x in sigmoid_node._prev, "Input x should be parent of Sigmoid node"
+    assert tanh_node is not None, "Tanh node not found in computation graph"
+    assert x in tanh_node._prev, "Input x should be parent of Tanh node"
     print("✓ Computation graph built correctly")
     
     return True
 
-def test_sigmoid_edge_cases():
-    """ Test 7: Sigmoid edge cases (large values) """
-    print("Testing Sigmoid edge cases...")
+def test_tanh_edge_cases():
+    """ Test 7: Tanh edge cases (large values) """
+    print("Testing Tanh edge cases...")
     
-    sigmoid = Sigmoid()
+    tanh = Tanh()
     
     # Test with very large positive and negative values
     x_large = Parameter(np.array([100.0, -100.0, 50.0, -50.0]))
-    out_large = sigmoid(x_large)
+    out_large = tanh(x_large)
     loss_large = out_large.sum()
     loss_large.backward()
     
@@ -218,11 +218,10 @@ def test_sigmoid_edge_cases():
     print(f"Output: {out_large.data}")
     print(f"Gradients: {x_large.grad}")
     
-    # For large positive x, sigmoid ≈ 1
-    # For large negative x, sigmoid ≈ 0
-    expected_output = np.array([1.0, 0.0, 1.0, 0.0])
-    # For large positive x, gradient ≈ 0
-    # For large negative x, gradient ≈ 0
+    # For large positive x, tanh ≈ 1
+    # For large negative x, tanh ≈ -1
+    expected_output = np.array([1.0, -1.0, 1.0, -1.0])
+    # For large |x|, gradient ≈ 0
     expected_grad = np.array([0.0, 0.0, 0.0, 0.0])
     
     assert np.allclose(out_large.data, expected_output, rtol=1e-3), "Large value output incorrect"
@@ -231,75 +230,115 @@ def test_sigmoid_edge_cases():
     
     return True
 
-def test_sigmoid_properties():
-    """ Test 8: Sigmoid special properties """
-    print("Testing Sigmoid properties...")
+def test_tanh_properties():
+    """ Test 8: Tanh special properties """
+    print("Testing Tanh properties...")
     
-    sigmoid = Sigmoid()
+    tanh = Tanh()
     
     x = Parameter(np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
-    out = sigmoid(x)
+    out = tanh(x)
     
-    # Property 1: Sigmoid output is between 0 and 1
-    assert np.all(out.data >= 0) and np.all(out.data <= 1), "Sigmoid output should be in [0,1]"
-    print("✓ Property 1: Output in [0,1]")
+    # Property 1: Tanh output is between -1 and 1
+    assert np.all(out.data >= -1) and np.all(out.data <= 1), "Tanh output should be in [-1, 1]"
+    print("✓ Property 1: Output in [-1, 1]")
     
-    # Property 2: Sigmoid(0) = 0.5
+    # Property 2: Tanh(0) = 0
     x_zero = Parameter(np.array([0.0]))
-    out_zero = sigmoid(x_zero)
-    assert np.allclose(out_zero.data, 0.5), f"Sigmoid(0) should be 0.5, got {out_zero.data}"
-    print("✓ Property 2: Sigmoid(0) = 0.5")
+    out_zero = tanh(x_zero)
+    assert np.allclose(out_zero.data, 0.0), f"Tanh(0) should be 0, got {out_zero.data}"
+    print("✓ Property 2: Tanh(0) = 0")
     
-    # Property 3: Sigmoid(-x) = 1 - Sigmoid(x)
+    # Property 3: Tanh is odd function: tanh(-x) = -tanh(x)
     x_pos = Parameter(np.array([2.0]))
     x_neg = Parameter(np.array([-2.0]))
-    out_pos = sigmoid(x_pos)
-    out_neg = sigmoid(x_neg)
-    assert np.allclose(out_pos.data, 1 - out_neg.data), f"Sigmoid(-x) should equal 1 - Sigmoid(x)"
-    print("✓ Property 3: Sigmoid(-x) = 1 - Sigmoid(x)")
+    out_pos = tanh(x_pos)
+    out_neg = tanh(x_neg)
+    assert np.allclose(out_pos.data, -out_neg.data), f"Tanh(-x) should equal -Tanh(x)"
+    print("✓ Property 3: Tanh is odd function")
+    
+    # Property 4: Gradient at 0 is 1
+    x_zero_grad = Parameter(np.array([0.0]))
+    out_zero_grad = tanh(x_zero_grad)
+    loss_zero = out_zero_grad.sum()
+    loss_zero.backward()
+    assert np.allclose(x_zero_grad.grad, 1.0), f"Gradient at 0 should be 1, got {x_zero_grad.grad}"
+    print("✓ Property 4: Gradient at 0 = 1")
     
     return True
 
-def test_sigmoid_multiple_uses():
-    """ Test 9: Same Sigmoid instance used multiple times """
-    print("Testing Sigmoid instance used multiple times...")
+def test_tanh_multiple_uses():
+    """ Test 9: Same Tanh instance used multiple times """
+    print("Testing Tanh instance used multiple times...")
     
-    sigmoid = Sigmoid()
+    tanh = Tanh()
     
+    # Create different inputs
     x1 = Parameter(np.array([-1.0, 0.0, 1.0]))
     x2 = Parameter(np.array([-2.0, 2.0, -3.0]))
     
-    # Use same Sigmoid instance twice
-    out1 = sigmoid(x1)
-    out2 = sigmoid(x2)
+    print(f"x1 input: {x1.data}")
+    print(f"x2 input: {x2.data}")
     
-    loss = out1.sum() + out2.sum()
+    # Use same Tanh instance twice
+    out1 = tanh(x1)
+    out2 = tanh(x2)
+    
+    print(f"out1 (tanh of x1): {out1.data}")
+    print(f"out2 (tanh of x2): {out2.data}")
+    
+    # Calculate expected tanh values manually
+    expected_out1 = np.tanh(x1.data)
+    expected_out2 = np.tanh(x2.data)
+    
+    print(f"Expected out1: {expected_out1}")
+    print(f"Expected out2: {expected_out2}")
+    
+    # Verify forward passes are different
+    assert not np.allclose(out1.data, out2.data), "Outputs should be different for different inputs"
+    
+    # Create separate losses and sum them
+    loss1 = out1.sum()
+    loss2 = out2.sum()
+    loss = loss1 + loss2
+    
+    print(f"loss1: {loss1.data}")
+    print(f"loss2: {loss2.data}")
+    print(f"total loss: {loss.data}")
+    
+    # Backward pass
     loss.backward()
     
     print(f"x1 gradients: {x1.grad}")
     print(f"x2 gradients: {x2.grad}")
     
-    # Expected gradients: sigmoid(x) * (1 - sigmoid(x))
-    expected_grad_x1 = 1/(1+np.exp(-x1.data)) * (1 - 1/(1+np.exp(-x1.data)))
-    expected_grad_x2 = 1/(1+np.exp(-x2.data)) * (1 - 1/(1+np.exp(-x2.data)))
+    # Expected gradients: 1 - tanh^2(x)
+    expected_grad_x1 = 1 - expected_out1 ** 2
+    expected_grad_x2 = 1 - expected_out2 ** 2
     
-    assert np.allclose(x1.grad, expected_grad_x1), "x1 gradients incorrect"
-    assert np.allclose(x2.grad, expected_grad_x2), "x2 gradients incorrect"
-    print("✓ Multiple uses of same Sigmoid instance works")
+    print(f"Expected x1 gradients: {expected_grad_x1}")
+    print(f"Expected x2 gradients: {expected_grad_x2}")
+    
+    # Check if gradients are correct and different from each other
+    assert not np.allclose(x1.grad, x2.grad), "Gradients should be different for different inputs"
+    assert np.allclose(x1.grad, expected_grad_x1), f"x1 gradients: got {x1.grad}, expected {expected_grad_x1}"
+    assert np.allclose(x2.grad, expected_grad_x2), f"x2 gradients: got {x2.grad}, expected {expected_grad_x2}"
+    
+    print("✓ Multiple uses of same Tanh instance works correctly")
     
     return True
 
 def main():
     tests = [
-        ('Forward Pass Basic', test_sigmoid_forward_basic),
-        ('Forward Pass 2D', test_sigmoid_forward_2d),
-        ('Backward Pass Basic', test_sigmoid_backward_basic),
-        ('Backward with Loss', test_sigmoid_backward_with_loss),
-        ('Backward Pass 2D', test_sigmoid_backward_2d),
-        ('Computation Graph', test_sigmoid_computation_graph),
-        ('Edge Cases', test_sigmoid_edge_cases),
-        ('Sigmoid Properties', test_sigmoid_properties),
-        ('Multiple Uses', test_sigmoid_multiple_uses),
+        ('Forward Pass Basic', test_tanh_forward_basic),
+        ('Forward Pass 2D', test_tanh_forward_2d),
+        ('Backward Pass Basic', test_tanh_backward_basic),
+        ('Backward with Loss', test_tanh_backward_with_loss),
+        ('Backward Pass 2D', test_tanh_backward_2d),
+        ('Computation Graph', test_tanh_computation_graph),
+        ('Edge Cases', test_tanh_edge_cases),
+        ('Tanh Properties', test_tanh_properties),
+        ('Multiple Uses', test_tanh_multiple_uses),
     ]
     
     passed = 0
@@ -315,7 +354,7 @@ def main():
             failed_tests.append(test_name)
     
     print("\n" + "=" * 50)
-    print("TEST SUMMARY - SIGMOID")
+    print("TEST SUMMARY - TANH")
     print("=" * 50)
     print(f"Total Tests: {len(tests)}")
     print(f"Passed: {passed}")
@@ -329,8 +368,8 @@ def main():
     print("\n" + "=" * 50)
     
     if failed == 0:
-        print("\n🎉 ALL SIGMOID TESTS PASSED 🎉")
-        print("Sigmoid implementation is working correctly!")
+        print("\n🎉 ALL TANH TESTS PASSED 🎉")
+        print("Tanh implementation is working correctly!")
     else:
         print(f"\n❌ {failed} Test(s) Failed. Check the errors above.")
         print("The program paused after each error so you can see what happened.")
