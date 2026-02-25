@@ -332,9 +332,9 @@ def test_leakyrelu_different_alphas():
     print("✓ All alpha values work correctly")
     return True
 
-def test_leakyrelu_multiple_uses():
-    """ Test 12: Same LeakyReLU instance used multiple times """
-    print("Testing LeakyReLU instance used multiple times...")
+def test_leakyrelu_multiple_uses_debug():
+    """ Debug version to identify the issue with LeakyReLU """
+    print("Debugging LeakyReLU multiple uses...")
     
     alpha = 0.01
     leakyrelu = LeakyReLU(alpha=alpha)
@@ -343,66 +343,109 @@ def test_leakyrelu_multiple_uses():
     x1 = Parameter(np.array([-1.0, 0.0, 1.0]))
     x2 = Parameter(np.array([-2.0, 2.0, -3.0]))
     
-    print(f"x1 input: {x1.data}")
-    print(f"x2 input: {x2.data}")
+    print("\n" + "=" * 60)
+    print("STEP 1: Input Values")
+    print("=" * 60)
+    print(f"x1: {x1.data}")
+    print(f"x2: {x2.data}")
+    print(f"x1 id: {id(x1)}")
+    print(f"x2 id: {id(x2)}")
     
-    # Use same LeakyReLU instance twice
+    print("\n" + "=" * 60)
+    print("STEP 2: First Forward Pass (x1)")
+    print("=" * 60)
     out1 = leakyrelu(x1)
+    print(f"out1._op: {out1._op}")
+    print(f"out1._prev: {[type(p).__name__ for p in out1._prev]}")
+    print(f"out1._prev ids: {[id(p) for p in out1._prev]}")
+    print(f"out1.data: {out1.data}")
+    print(f"Expected out1: {np.where(x1.data > 0, x1.data, alpha * x1.data)}")
+    
+    print("\n" + "=" * 60)
+    print("STEP 3: Second Forward Pass (x2)")
+    print("=" * 60)
     out2 = leakyrelu(x2)
+    print(f"out2._op: {out2._op}")
+    print(f"out2._prev: {[type(p).__name__ for p in out2._prev]}")
+    print(f"out2._prev ids: {[id(p) for p in out2._prev]}")
+    print(f"out2.data: {out2.data}")
+    print(f"Expected out2: {np.where(x2.data > 0, x2.data, alpha * x2.data)}")
     
-    print(f"out1 (leakyrelu of x1): {out1.data}")
-    print(f"out2 (leakyrelu of x2): {out2.data}")
+    print("\n" + "=" * 60)
+    print("STEP 4: Verify Forward Passes")
+    print("=" * 60)
+    out1_correct = np.allclose(out1.data, np.where(x1.data > 0, x1.data, alpha * x1.data))
+    out2_correct = np.allclose(out2.data, np.where(x2.data > 0, x2.data, alpha * x2.data))
+    outputs_different = not np.allclose(out1.data, out2.data)
     
-    # Calculate expected values manually
-    expected_out1 = np.where(x1.data > 0, x1.data, alpha * x1.data)
-    expected_out2 = np.where(x2.data > 0, x2.data, alpha * x2.data)
+    print(f"out1 correct? {out1_correct}")
+    print(f"out2 correct? {out2_correct}")
+    print(f"outputs different? {outputs_different}")
     
-    print(f"Expected out1: {expected_out1}")
-    print(f"Expected out2: {expected_out2}")
+    assert out1_correct, "out1 forward pass incorrect"
+    assert out2_correct, "out2 forward pass incorrect"
+    assert outputs_different, "Outputs should be different for different inputs"
     
-    # Verify forward passes are correct and different
-    assert np.allclose(out1.data, expected_out1), "out1 forward pass incorrect"
-    assert np.allclose(out2.data, expected_out2), "out2 forward pass incorrect"
-    assert not np.allclose(out1.data, out2.data), "Outputs should be different for different inputs"
-    print("✓ Forward passes correct and different")
-    
-    # Create separate losses and sum them
+    print("\n" + "=" * 60)
+    print("STEP 5: Create Losses")
+    print("=" * 60)
     loss1 = out1.sum()
     loss2 = out2.sum()
     loss = loss1 + loss2
-    
     print(f"loss1: {loss1.data}")
     print(f"loss2: {loss2.data}")
     print(f"total loss: {loss.data}")
+    print(f"loss._op: {loss._op}")
+    print(f"loss._prev ids: {[id(p) for p in loss._prev]}")
     
-    # Backward pass
+    print("\n" + "=" * 60)
+    print("STEP 6: Before Backward")
+    print("=" * 60)
+    print(f"x1.grad before: {x1.grad}")
+    print(f"x2.grad before: {x2.grad}")
+    
+    print("\n" + "=" * 60)
+    print("STEP 7: Backward Pass")
+    print("=" * 60)
     loss.backward()
     
-    print(f"x1 gradients: {x1.grad}")
-    print(f"x2 gradients: {x2.grad}")
+    print("\n" + "=" * 60)
+    print("STEP 8: After Backward")
+    print("=" * 60)
+    print(f"x1.grad after: {x1.grad}")
+    print(f"x2.grad after: {x2.grad}")
     
-    # Expected gradients: 1 where x > 0, alpha elsewhere
+    # Calculate expected gradients
     expected_grad_x1 = np.where(x1.data > 0, 1.0, alpha)
     expected_grad_x2 = np.where(x2.data > 0, 1.0, alpha)
     
+    print("\n" + "=" * 60)
+    print("STEP 9: Expected Gradients")
+    print("=" * 60)
     print(f"Expected x1 gradients: {expected_grad_x1}")
     print(f"Expected x2 gradients: {expected_grad_x2}")
     
-    # Check if gradients are correct and different from each other
-    grad_diff = not np.allclose(x1.grad, x2.grad)
+    print("\n" + "=" * 60)
+    print("STEP 10: Gradient Check")
+    print("=" * 60)
     x1_correct = np.allclose(x1.grad, expected_grad_x1)
     x2_correct = np.allclose(x2.grad, expected_grad_x2)
+    gradients_different = not np.allclose(x1.grad, x2.grad)
     
-    print(f"Gradients different? {grad_diff}")
     print(f"x1 correct? {x1_correct}")
     print(f"x2 correct? {x2_correct}")
+    print(f"gradients different? {gradients_different}")
     
-    assert grad_diff, "Gradients should be different for different inputs"
+    if not x1_correct:
+        print(f"x1 grad diff: {x1.grad - expected_grad_x1}")
+    if not x2_correct:
+        print(f"x2 grad diff: {x2.grad - expected_grad_x2}")
+    
     assert x1_correct, f"x1 gradients: got {x1.grad}, expected {expected_grad_x1}"
     assert x2_correct, f"x2 gradients: got {x2.grad}, expected {expected_grad_x2}"
+    assert gradients_different, "Gradients should be different for different inputs"
     
-    print("✓ Multiple uses of same LeakyReLU instance works correctly")
-    
+    print("\n✓ Multiple uses test passed!")
     return True
 
 def main():
@@ -418,7 +461,7 @@ def main():
         ('Edge Cases', test_leakyrelu_edge_cases),
         ('LeakyReLU Properties', test_leakyrelu_properties),
         ('Different Alphas', test_leakyrelu_different_alphas),
-        ('Multiple Uses', test_leakyrelu_multiple_uses),
+        ('Multiple Uses', test_leakyrelu_multiple_uses_debug),
     ]
     
     passed = 0
