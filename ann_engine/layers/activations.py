@@ -189,9 +189,6 @@ class ELU(Module):
     def __repr__(self):
         return f"ELU(alpha={self.alpha})"
 
-import numpy as np
-from ann_engine.core import Tensor
-from ann_engine.layers.base import Module
 
 class Softmax(Module):
     """
