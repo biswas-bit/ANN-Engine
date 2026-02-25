@@ -115,7 +115,6 @@ class LeakyReLU(Module):
     def __init__(self, alpha=0.01):
         super().__init__()
         self.alpha = alpha
-        self.cache = None  # Store input for backward pass
     
     def forward(self, x):
         """
@@ -127,17 +126,14 @@ class LeakyReLU(Module):
         Returns:
             Tensor with LeakyReLU applied
         """
-        # Store input for backward pass
-        self.cache = x
-        
         # Apply LeakyReLU
         out_data = np.where(x.data > 0, x.data, self.alpha * x.data)
         out = Tensor(out_data, (x,), 'LeakyReLU')
         
-        def _backward():
+        def _backward(original_x=x, original_out=out, alpha=self.alpha):
             # Gradient: 1 where x > 0, alpha elsewhere
-            mask = np.where(self.cache.data > 0, 1.0, self.alpha)
-            self.cache.grad += out.grad * mask
+            mask = np.where(original_x.data > 0, 1.0, alpha)
+            original_x.grad += original_out.grad * mask
         
         out._backward = _backward
         return out
