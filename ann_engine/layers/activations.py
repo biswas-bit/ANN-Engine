@@ -193,12 +193,14 @@ class Softmax(Module):
     """
     Softmax activation function for multi-class classification
     f(x_i) = exp(x_i) / sum(exp(x_j)) for all j
+    
+    Args:
+        dim: Dimension along which to apply softmax (default: -1)
     """
     
     def __init__(self, dim=-1):
         super().__init__()
         self.dim = dim
-        self.cache = None  # Store output for backward pass
     
     def forward(self, x):
         """
@@ -210,40 +212,63 @@ class Softmax(Module):
         Returns:
             Tensor with softmax applied
         """
-        # Shift for numerical stability (subtract max)
-        x_shifted = x.data - np.max(x.data, axis=self.dim, keepdims=True)
+        # Check if dim is valid
+        if self.dim >= len(x.data.shape) or self.dim < -len(x.data.shape):
+            raise ValueError(f"Dimension {self.dim} out of range for input shape {x.data.shape}")
+        
+        # For numerical stability, subtract the maximum value along the dimension
+        x_max = np.max(x.data, axis=self.dim, keepdims=True)
+        x_shifted = x.data - x_max
         
         # Compute exponentials
         exp_x = np.exp(x_shifted)
         
+        # Compute sum along dimension
+        sum_exp = np.sum(exp_x, axis=self.dim, keepdims=True)
+        
         # Compute softmax
-        out_data = exp_x / np.sum(exp_x, axis=self.dim, keepdims=True)
+        out_data = exp_x / sum_exp
         out = Tensor(out_data, (x,), 'Softmax')
         
-        # Store output for backward pass
-        self.cache = out_data
+        # Store dimension for this specific forward pass
+        # IMPORTANT: Capture the current values, not the instance variables
+        current_dim = self.dim
         
-        def _backward():
-            # Jacobian is more complex, but for cross-entropy loss,
-            # the gradient simplifies. This is a general implementation.
-            batch_size = out_data.shape[0]
-            grad = out.grad.copy()
+        def _backward(original_x=x, original_out=out, dim=current_dim):
+            """
+            Backward pass for softmax.
             
-            # For each sample in batch
-            for i in range(batch_size):
-                s = out_data[i].reshape(-1, 1)
-                # Jacobian: diag(s) - s @ s.T
-                jacobian = np.diagflat(s) - np.dot(s, s.T)
-                grad[i] = grad[i].reshape(1, -1) @ jacobian
+            The Jacobian of softmax is:
+            J_ij = s_i * (δ_ij - s_j)
+            where s_i is the i-th output of softmax and δ_ij is Kronecker delta
             
-            x.grad += grad.reshape(x.data.shape)
+            This gives: dx_i = sum_j (grad_j * s_i * (δ_ij - s_j))
+                             = s_i * (grad_i - sum_j(grad_j * s_j))
+            """
+            if original_out.grad is None:
+                return
+            
+            s = original_out.data  # Softmax output
+            grad = original_out.grad  # Gradient from upstream
+            
+            # Compute gradient for input
+            # dx = s * (grad - sum(grad * s, axis=dim, keepdims=True))
+            
+            # Sum of grad * s along the softmax dimension
+            sum_grad_s = np.sum(grad * s, axis=dim, keepdims=True)
+            
+            # Gradient w.r.t input
+            dx = s * (grad - sum_grad_s)
+            
+            # Accumulate gradient
+            original_x.grad += dx
         
         out._backward = _backward
         return out
-    
+
     def __repr__(self):
         return f"Softmax(dim={self.dim})"
-
+    
 
 class LogSoftmax(Module):
     """
