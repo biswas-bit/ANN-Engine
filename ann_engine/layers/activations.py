@@ -231,33 +231,29 @@ class Softmax(Module):
         out_data = exp_x / sum_exp
         out = Tensor(out_data, (x,), 'Softmax')
         
-        # Store the input and output for this specific forward pass
-        # We need to attach them to the output tensor itself
-        out._saved_for_backward = {
-            'x': x,
-            'softmax_output': out_data,
-            'dim': self.dim
-        }
+        # Save for backward - attach to the output tensor
+        out._softmax_input = x
+        out._softmax_output = out_data
+        out._softmax_dim = self.dim
         
         def _backward():
-            # Retrieve saved values
-            saved = out._saved_for_backward
-            x_tensor = saved['x']
-            s = saved['softmax_output']
-            dim = saved['dim']
+            # Get saved values
+            x_tensor = out._softmax_input
+            s = out._softmax_output
+            dim = out._softmax_dim
             
             if out.grad is None:
                 return
             
             grad = out.grad
             
-            # Compute gradient for input
-            # dx = s * (grad - sum(grad * s, axis=dim, keepdims=True))
+            # For softmax, the gradient is: s * (grad - sum(grad * s, axis=dim, keepdims=True))
+            # This is the correct formula for the Jacobian-vector product
             
-            # Sum of grad * s along the softmax dimension
+            # Sum of (grad * s) along the softmax dimension
             sum_grad_s = np.sum(grad * s, axis=dim, keepdims=True)
             
-            # Gradient w.r.t input
+            # Compute gradient for input
             dx = s * (grad - sum_grad_s)
             
             # Accumulate gradient

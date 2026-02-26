@@ -157,7 +157,48 @@ grads_different = (not np.allclose(x1.grad, x2.grad) and
     
 print(f"\nAll gradients different? {grads_different}")
     
-    
+new_loss = out1.sum()  
+x1.grad = np.zeros_like(x1.data)
+x2.grad = np.zeros_like(x2.data)
+x3.grad = np.zeros_like(x3.data)
 
+print("Reset gradients to zero")
+print(f"x1.grad after reset: {x1.grad}")
+print(f"x2.grad after reset: {x2.grad}")
+print(f"x3.grad after reset: {x3.grad}")
+
+new_loss.backward()
+print(f"\nAfter new_loss.backward() (only out1):")
+print(f"x1.grad: {x1.grad} (should be non-zero)")
+print(f"x2.grad: {x2.grad} (should be zero)")
+print(f"x3.grad: {x3.grad} (should be zero)")
+
+x2_zero = np.allclose(x2.grad, 0)
+x3_zero = np.allclose(x3.grad, 0)
+x1_nonzero = not np.allclose(x1.grad, 0)
+    
+print(f"x1 gradient non-zero? {x1_nonzero}")
+print(f"x2 gradient zero? {x2_zero}")
+print(f"x3 gradient zero? {x3_zero}")
+
+print("\n" + "=" * 70)
+if (x1_correct and x2_correct and x3_correct and 
+        grads_different and x2_zero and x3_zero):
+        print("✓✓✓ ALL MULTIPLE CALLS TESTS PASSED! ✓✓✓")
+        print("The Softmax implementation correctly handles multiple independent calls.")
+else:
+        print("✗✗✗ MULTIPLE CALLS TESTS FAILED! ✗✗✗")
+        print("The Softmax implementation has issues with multiple calls.")
+        print("\nIssues found:")
+        if not x1_correct:
+            print(f"  - x1 gradients incorrect")
+        if not x2_correct:
+            print(f"  - x2 gradients incorrect")
+        if not x3_correct:
+            print(f"  - x3 gradients incorrect")
+        if not grads_different:
+            print(f"  - Gradients are not all different (some are equal)")
+        if not x2_zero or not x3_zero:
+            print(f"  - Gradients leak between independent calls")
 
 input("press enter ..")
