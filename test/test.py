@@ -64,4 +64,16 @@ print(f"Expected out3: {expected3}")
 print(f"out1 correct ? {np.allclose(out3.data, expected3)}")
 
 
+print("\n" + "=" * 70)
+print("step 5: Forward pass - Veryfy all Outputs are differentiable")
+print("=" * 70)
+out1_vs_out2_diff = not np.allclose(out1.data, out2.data)
+out1_vs_out3_diff = not np.allclose(out1.data, out3.data)
+out2_vs_out3_diff = not np.allclose(out2.data, out3.data)
+
+print(f"out1 vs out2 different? {out1_vs_out2_diff}")
+print(f"out1 vs out3 different? {out1_vs_out3_diff}")
+print(f"out2 vs out3 different? {out2_vs_out3_diff}")
+
+
 input("press enter ..")
