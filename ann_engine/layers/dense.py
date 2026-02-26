@@ -34,6 +34,7 @@ class Dense(Module):
         
         if bias:
             # Initialize bias to zeros (better for gradients)
+            # Already in correct shape (1, out_features)
             bias_data = np.zeros((1, out_features))
             self.b = Parameter(bias_data)
         else:
@@ -49,9 +50,6 @@ class Dense(Module):
         Returns:
             Tensor of shape (batch_size, out_features)
         """
-        # Store original shape for potential debugging
-        original_shape = x.data.shape
-        
         # Handle single sample case (1D input)
         if len(x.data.shape) == 1:
             x = x.reshape(1, -1)
@@ -66,16 +64,20 @@ class Dense(Module):
         # Matrix multiplication: (batch_size, in_features) @ (in_features, out_features)
         out = x @ self.W
         
-        # Add bias if present - handle broadcasting explicitly
+        # Add bias if present
         if self.b is not None:
-            # Ensure bias is broadcastable
-            batch_size = out.data.shape[0]
-            # Reshape bias to (1, out_features) if needed
-            if len(self.b.data.shape) == 1:
-                self.b.data = self.b.data.reshape(1, -1)
+            # No need to reshape - bias is already (1, out_features)
+            # Broadcasting will handle the batch dimension automatically
             out = out + self.b
         
         return out
+    
+    def parameters(self):
+        """Return list of parameters"""
+        params = [self.W]
+        if self.b is not None:
+            params.append(self.b)
+        return params
     
     def __repr__(self):
         return (f"Dense(in_features={self.in_features}, "
