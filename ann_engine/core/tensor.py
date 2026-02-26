@@ -10,257 +10,228 @@ class Tensor:
         
     def sum(self):
         out = Tensor(self.data.sum(), (self,), 'sum')
+        saved_self = self
         def _backward():
-            self.grad += out.grad * np.ones_like(self.data)
-            
+            saved_self.grad += out.grad * np.ones_like(saved_self.data)
         out._backward = _backward
         return out
      
     def mean(self, axis=None, keepdims=False):
-       """
-       Compute mean of tensor elements along specified axis.
-    
-       Args:
-           axis: Axis or axes along which to compute mean
-           keepdims: If True, reduced dimensions are kept
-    
-       Returns:
-           Tensor with mean value(s)
-       """
-       if axis is None:
-        # Global mean (scalar output)
-           out = Tensor(self.data.mean(), (self,), 'mean')
-           def _backward():
-               self.grad += np.ones_like(self.data) * (out.grad / self.data.size)
-           out._backward = _backward
-           return out
-       else:
-        # Mean along specific axis
-           out = Tensor(self.data.mean(axis=axis, keepdims=keepdims), (self,), 'mean')
-           def _backward():
-               # For axis-wise mean, we need to handle broadcasting correctly
-               grad = out.grad / self.data.shape[axis]
-               # Expand grad to original shape
-               expand_shape = list(self.data.shape)
-               if not keepdims:
-                   # Insert back the reduced dimension
-                   expand_shape.insert(axis if axis >= 0 else len(expand_shape), 1)
-               grad = grad.reshape(expand_shape)
-               self.grad += np.broadcast_to(grad, self.data.shape)
-           out._backward = _backward
-           return out
+        if axis is None:
+            out = Tensor(self.data.mean(), (self,), 'mean')
+            saved_self = self
+            def _backward():
+                saved_self.grad += np.ones_like(saved_self.data) * (out.grad / saved_self.data.size)
+            out._backward = _backward
+            return out
+        else:
+            out = Tensor(self.data.mean(axis=axis, keepdims=keepdims), (self,), 'mean')
+            saved_self = self
+            saved_axis = axis
+            saved_keepdims = keepdims
+            def _backward():
+                grad = out.grad / saved_self.data.shape[saved_axis]
+                expand_shape = list(saved_self.data.shape)
+                if not saved_keepdims:
+                    expand_shape.insert(saved_axis if saved_axis >= 0 else len(expand_shape), 1)
+                grad = grad.reshape(expand_shape)
+                saved_self.grad += np.broadcast_to(grad, saved_self.data.shape)
+            out._backward = _backward
+            return out
     
     def reshape(self, *shape):
         out = Tensor(self.data.reshape(shape), (self,), 'reshape')
-        
+        saved_self = self
         def _backward():
-            self.grad += out.grad.reshape(self.data.shape)
-            
+            saved_self.grad += out.grad.reshape(saved_self.data.shape)
         out._backward = _backward
         return out
     
     @property
     def T(self):
         out = Tensor(self.data.T, (self,), 'T')
-        
+        saved_self = self
         def _backward():
-            self.grad += out.grad.T 
-        
+            saved_self.grad += out.grad.T 
         out._backward = _backward
         return out
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data + other.data, (self, other), '+')
-    
+        saved_self = self
+        saved_other = other
         def _backward():
-            # Handle gradient for self
-            if self.data.shape != out.data.shape:
-                # Sum over broadcasted dimensions
+            if saved_self.data.shape != out.data.shape:
                 axis_to_sum = []
-                for i, (dim_self, dim_out) in enumerate(zip(self.data.shape, out.data.shape)):
+                for i, (dim_self, dim_out) in enumerate(zip(saved_self.data.shape, out.data.shape)):
                     if dim_self != dim_out:
                         axis_to_sum.append(i)
-            
                 if axis_to_sum:
-                    # Keep dimensions to allow broadcasting back
                     grad_self = out.grad.sum(axis=tuple(axis_to_sum), keepdims=True)
-                    # Remove extra dimensions if needed
-                    grad_self = grad_self.reshape(self.data.shape)
+                    grad_self = grad_self.reshape(saved_self.data.shape)
                 else:
                     grad_self = out.grad
             else:
                 grad_self = out.grad
-        
-            # Handle gradient for other
-            if other.data.shape != out.data.shape:
+
+            if saved_other.data.shape != out.data.shape:
                 axis_to_sum = []
-                for i, (dim_other, dim_out) in enumerate(zip(other.data.shape, out.data.shape)):
+                for i, (dim_other, dim_out) in enumerate(zip(saved_other.data.shape, out.data.shape)):
                     if dim_other != dim_out:
                         axis_to_sum.append(i)
-            
                 if axis_to_sum:
                     grad_other = out.grad.sum(axis=tuple(axis_to_sum), keepdims=True)
-                    grad_other = grad_other.reshape(other.data.shape)
+                    grad_other = grad_other.reshape(saved_other.data.shape)
                 else:
                     grad_other = out.grad
             else:
                 grad_other = out.grad
-        
-            self.grad += grad_self
-            other.grad += grad_other
-        
+
+            saved_self.grad += grad_self
+            saved_other.grad += grad_other
         out._backward = _backward
         return out
     
     def __radd__(self, other):
-        """Handle reverse addition (e.g., 5 + tensor)"""
         return self + other
     
     def __sub__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data - other.data, (self, other), '-')
+        saved_self = self
+        saved_other = other
         def _backward():
-            # Handle broadcasting for self
-            if self.data.shape != out.data.shape:
-                axis = tuple(range(len(out.grad.shape) - len(self.data.shape)))
-                self.grad += out.grad.sum(axis=axis)
+            if saved_self.data.shape != out.data.shape:
+                axis = tuple(range(len(out.grad.shape) - len(saved_self.data.shape)))
+                saved_self.grad += out.grad.sum(axis=axis)
             else:
-                self.grad += out.grad
+                saved_self.grad += out.grad
                 
-            # Handle broadcasting for other
-            if other.data.shape != out.data.shape:
-                axis = tuple(range(len(out.grad.shape) - len(other.data.shape)))
-                other.grad += (-out.grad).sum(axis=axis)
+            if saved_other.data.shape != out.data.shape:
+                axis = tuple(range(len(out.grad.shape) - len(saved_other.data.shape)))
+                saved_other.grad += (-out.grad).sum(axis=axis)
             else:
-                other.grad += -out.grad
-            
+                saved_other.grad += -out.grad
         out._backward = _backward
         return out
     
     def __rsub__(self, other):
-        """Handle reverse subtraction (e.g., 5 - tensor)"""
         return Tensor(other) - self
 
     def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data * other.data, (self, other), '*')
+        saved_self = self
+        saved_other = other
         def _backward():
-            # Calculate gradients
-            grad_self = other.data * out.grad
-            grad_other = self.data * out.grad
+            grad_self = saved_other.data * out.grad
+            grad_other = saved_self.data * out.grad
             
-            # Handle broadcasting for self
-            if self.data.shape != grad_self.shape:
-                axis = tuple(range(len(grad_self.shape) - len(self.data.shape)))
-                self.grad += grad_self.sum(axis=axis)
+            if saved_self.data.shape != grad_self.shape:
+                axis = tuple(range(len(grad_self.shape) - len(saved_self.data.shape)))
+                saved_self.grad += grad_self.sum(axis=axis)
             else:
-                self.grad += grad_self
+                saved_self.grad += grad_self
                 
-            # Handle broadcasting for other
-            if other.data.shape != grad_other.shape:
-                axis = tuple(range(len(grad_other.shape) - len(other.data.shape)))
-                other.grad += grad_other.sum(axis=axis)
+            if saved_other.data.shape != grad_other.shape:
+                axis = tuple(range(len(grad_other.shape) - len(saved_other.data.shape)))
+                saved_other.grad += grad_other.sum(axis=axis)
             else:
-                other.grad += grad_other
-            
+                saved_other.grad += grad_other
         out._backward = _backward
         return out
     
     def __rmul__(self, other):
-        """Handle reverse multiplication (e.g., 5 * tensor)"""
         return self * other
     
     def __truediv__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data / other.data, (self, other), '/')
+        saved_self = self
+        saved_other = other
         def _backward():
-            # Calculate gradients
-            grad_self = (1.0 / other.data) * out.grad
-            grad_other = (-self.data / (other.data ** 2)) * out.grad
+            grad_self = (1.0 / saved_other.data) * out.grad
+            grad_other = (-saved_self.data / (saved_other.data ** 2)) * out.grad
             
-            # Handle broadcasting for self
-            if self.data.shape != grad_self.shape:
-                axis = tuple(range(len(grad_self.shape) - len(self.data.shape)))
-                self.grad += grad_self.sum(axis=axis)
+            if saved_self.data.shape != grad_self.shape:
+                axis = tuple(range(len(grad_self.shape) - len(saved_self.data.shape)))
+                saved_self.grad += grad_self.sum(axis=axis)
             else:
-                self.grad += grad_self
+                saved_self.grad += grad_self
                 
-            # Handle broadcasting for other
-            if other.data.shape != grad_other.shape:
-                axis = tuple(range(len(grad_other.shape) - len(other.data.shape)))
-                other.grad += grad_other.sum(axis=axis)
+            if saved_other.data.shape != grad_other.shape:
+                axis = tuple(range(len(grad_other.shape) - len(saved_other.data.shape)))
+                saved_other.grad += grad_other.sum(axis=axis)
             else:
-                other.grad += grad_other
-            
+                saved_other.grad += grad_other
         out._backward = _backward
         return out
     
     def __rtruediv__(self, other):
-        """Handle reverse division (e.g., 5 / tensor)"""
         return Tensor(other) / self
     
     def __pow__(self, power):
         assert isinstance(power, (int, float)), "Only supports int or float powers"
         out = Tensor(self.data ** power, (self,), f'**{power}')
+        saved_self = self
+        saved_power = power
         def _backward():
-            self.grad += (power * self.data ** (power - 1)) * out.grad
-            
+            saved_self.grad += (saved_power * saved_self.data ** (saved_power - 1)) * out.grad
         out._backward = _backward
         return out
     
     def __rpow__(self, other):
-        """Handle reverse power (e.g., 2 ** tensor) - not commonly used"""
         raise NotImplementedError("Reverse power not implemented")
     
     def __matmul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data @ other.data, (self, other), '@')
+        saved_self = self
+        saved_other = other
         def _backward():
-            self.grad += out.grad @ other.data.T
-            other.grad += self.data.T @ out.grad
-            
+            saved_self.grad += out.grad @ saved_other.data.T
+            saved_other.grad += saved_self.data.T @ out.grad
         out._backward = _backward
         return out
     
     def __rmatmul__(self, other):
-        """Handle reverse matrix multiplication"""
         return Tensor(other) @ self
 
+    def __neg__(self):
+        out = Tensor(-self.data, (self,), 'neg')
+        saved_self = self
+        def _backward():
+            saved_self.grad += -out.grad
+        out._backward = _backward
+        return out
+
     def backward(self, retain_graph=False):
-        """
-        Backpropagate gradients through the computation graph.
-        
-        Args:
-            retain_graph (bool): If True, keep the graph for additional backward passes.
-                                If False, free the graph after backward pass.
-        """
-        # Topological sort of nodes to handle dependencies
         topo = []
         visited = set()
         def build_topo(t):
-            if t not in visited:
-                visited.add(t)
+            if id(t) not in visited:
+                visited.add(id(t))
                 for child in t._prev:
                     build_topo(child)
                 topo.append(t)
         build_topo(self)
 
-        # Initialize gradient of output correctly
-        if self.data.shape == ():  # Scalar output
+        if self.data.shape == ():
             self.grad = np.array(1.0, dtype=np.float32)
-        else:  # Non-scalar output
+        else:
             self.grad = np.ones_like(self.data)
 
-        # Traverse nodes in reverse topological order
         for t in reversed(topo):
             t._backward()
             
-        # If not retaining graph, clear the computation graph to free memory
         if not retain_graph:
             for t in topo:
                 t._prev = set()
 
+    def zero_grad(self):
+        """Reset gradients to zero."""
+        self.grad = np.zeros_like(self.data)
+
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad})"
-
