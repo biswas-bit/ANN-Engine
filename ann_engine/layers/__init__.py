@@ -3,6 +3,8 @@ from ann_engine.layers.activations import (
     Softmax, LogSoftmax, Softplus, Swish, GELU, Identity
 )
 
+from ann_engine.layers.dense import Dense
+
 __all__ = [
     'ReLU',
     'Sigmoid', 
@@ -14,5 +16,9 @@ __all__ = [
     'Softplus',
     'Swish',
     'GELU',
-    'Identity'
+    'Identity',
+    'Dense'
 ]
+
+__version__ = "0.1.0"
+__doc__ = "Neural network layers module containing activations and dense layers"
