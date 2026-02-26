@@ -105,5 +105,59 @@ print(f"x1.grad after: {x1.grad}")
 print(f"x2.grad after: {x2.grad}")
 print(f"x3.grad after: {x3.grad}")
 
+print("\n" + "-" * 70)
+print("STEP 9: Calculate Expected Gradients")
+print("-" * 70)
+
+grad_upstream = 1.0
+s1 = out1.data
+sum_s1 = np.sum(s1, axis=-1, keepdims=True)
+expected_grad_x1 = s1 * (grad_upstream - s1)
+
+s2 = out2.data
+expected_grad_x2 = s2 * (grad_upstream - s2)
+
+s3 = out3.data
+expected_grad_x3 = s3 * (grad_upstream - s3)
+
+print(f"Expected gradient for x1: {expected_grad_x1 }")
+print(f"Expected gradient for x2: {expected_grad_x2}")
+print(f"Expected gradient for x3: {expected_grad_x3}")
+
+
+print("\n" + "-" * 70)
+print("STEP 10: Compare Gradients")
+print("-" * 70)
+
+x1_correct = np.allclose(x1.grad, expected_grad_x1, rtol=1e-5)
+x2_correct = np.allclose(x2.grad, expected_grad_x2, rtol=1e-5)
+x3_correct = np.allclose(x3.grad, expected_grad_x3, rtol=1e-5)
+
+print(f"x1 gradient correct? {x1_correct}")
+if not x1_correct:
+    print(f"  Difference: {x1.grad - expected_grad_x1}")
+    print(f"  Got: {x1.grad}")
+    print(f"  Expected: {expected_grad_x1}")
+    
+print(f"x2 gradient correct? {x2_correct}")
+if not x2_correct:
+    print(f"  Difference: {x2.grad - expected_grad_x2}")
+    print(f"  Got: {x2.grad}")
+    print(f"  Expected: {expected_grad_x2}")
+    
+print(f"x3 gradient correct? {x3_correct}")
+if not x3_correct:
+    print(f"  Difference: {x3.grad - expected_grad_x3}")
+    print(f"  Got: {x3.grad}")
+    print(f"  Expected: {expected_grad_x3}")
+    
+grads_different = (not np.allclose(x1.grad, x2.grad) and 
+                       not np.allclose(x1.grad, x3.grad) and 
+                       not np.allclose(x2.grad, x3.grad))
+    
+print(f"\nAll gradients different? {grads_different}")
+    
+    
+
 
 input("press enter ..")
