@@ -32,7 +32,7 @@ print(f"Expected out1: {expected1}")
 print(f"out1 correct ? {np.allclose(out1.data, expected1)}")
 
 print("\n" + "=" * 70)
-print("step 2: Forward pass - second call (x1)")
+print("step 3: Forward pass - second call (x1)")
 print("=" * 70)
 
 out2 = softmax(x2)
@@ -41,6 +41,27 @@ print(f"Out2 Operation:{out2._op}")
 print(f"Out2 parents:{[id(p) for p in out2._prev]}")
 print(f"out2 id: {id(out2)}")
 
+exp_x2 = np.exp(x2.data - np.max(x2.data))
+expected2 = exp_x2 / np.sum(exp_x2)
+print(f"Expected out2: {expected2}")
+print(f"out1 correct ? {np.allclose(out1.data, expected2)}")
+
+
+
+print("\n" + "=" * 70)
+print("step 4: Forward pass - Third call (x1)")
+print("=" * 70)
+
+out3 = softmax(x3)
+print(f"Out3 data:{out3.data}")
+print(f"Out3 Operation:{out3._op}")
+print(f"Out3 parents:{[id(p) for p in out3._prev]}")
+print(f"out3 id: {id(out3)}")
+
+exp_x3 = np.exp(x3.data - np.max(x3.data))
+expected3 = exp_x3 / np.sum(exp_x3)
+print(f"Expected out3: {expected3}")
+print(f"out1 correct ? {np.allclose(out3.data, expected3)}")
 
 
 input("press enter ..")
