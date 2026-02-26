@@ -191,74 +191,32 @@ class ELU(Module):
 
 
 class Softmax(Module):
-    """
-    Softmax activation function for multi-class classification
-    f(x_i) = exp(x_i) / sum(exp(x_j)) for all j
-    
-    Args:
-        dim: Dimension along which to apply softmax (default: -1)
-    """
-    
     def __init__(self, dim=-1):
         super().__init__()
         self.dim = dim
     
     def forward(self, x):
-        """
-        Forward pass: softmax along specified dimension
-        
-        Args:
-            x: Input Tensor
-        
-        Returns:
-            Tensor with softmax applied
-        """
-        # Check if dim is valid
         if self.dim >= len(x.data.shape) or self.dim < -len(x.data.shape):
             raise ValueError(f"Dimension {self.dim} out of range for input shape {x.data.shape}")
         
-        # For numerical stability, subtract the maximum value along the dimension
         x_max = np.max(x.data, axis=self.dim, keepdims=True)
-        x_shifted = x.data - x_max
-        
-        # Compute exponentials
-        exp_x = np.exp(x_shifted)
-        
-        # Compute sum along dimension
+        exp_x = np.exp(x.data - x_max)
         sum_exp = np.sum(exp_x, axis=self.dim, keepdims=True)
-        
-        # Compute softmax
         out_data = exp_x / sum_exp
+
         out = Tensor(out_data, (x,), 'Softmax')
-        
-        # Save for backward - attach to the output tensor
-        out._softmax_input = x
-        out._softmax_output = out_data
-        out._softmax_dim = self.dim
-        
+
+        # Capture in closure — not as attributes on out
+        saved_x = x
+        saved_output = out_data
+        saved_dim = self.dim
+
         def _backward():
-            # Get saved values
-            x_tensor = out._softmax_input
-            s = out._softmax_output
-            dim = out._softmax_dim
-            
-            if out.grad is None:
-                return
-            
             grad = out.grad
-            
-            # For softmax, the gradient is: s * (grad - sum(grad * s, axis=dim, keepdims=True))
-            # This is the correct formula for the Jacobian-vector product
-            
-            # Sum of (grad * s) along the softmax dimension
-            sum_grad_s = np.sum(grad * s, axis=dim, keepdims=True)
-            
-            # Compute gradient for input
-            dx = s * (grad - sum_grad_s)
-            
-            # Accumulate gradient
-            x_tensor.grad += dx
-        
+            sum_grad_s = np.sum(grad * saved_output, axis=saved_dim, keepdims=True)
+            dx = saved_output * (grad - sum_grad_s)
+            saved_x.grad += dx
+
         out._backward = _backward
         return out
 
