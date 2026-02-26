@@ -235,16 +235,126 @@ print(f"x1c gradient non-zero? {x1c_nonzero}")
 print(f"x2c gradient zero? {x2c_zero}")
 print(f"x3c gradient zero? {x3c_zero}")
 
+# ======================================================================
+# DEPENDENT CALLS TESTS
+# Chain: x -> softmax1 -> softmax2 -> softmax3 -> weighted loss
+# Gradient must flow all the way back through all three softmax layers
+# ======================================================================
+print("\n" + "=" * 70)
+print("STEP 12: Dependent calls - chained softmax")
+print("=" * 70)
+print("Chain: x_d -> softmax -> softmax -> softmax -> weighted loss")
+print("Gradient must flow back through all 3 layers to x_d")
+
+x_d = Parameter(np.array([[1.0, 2.0, 3.0]]))
+softmax_d = Softmax()
+
+# Three dependent calls — each feeds into the next
+chain1 = softmax_d(x_d)          # softmax(x_d)
+chain2 = softmax_d(chain1)       # softmax(softmax(x_d))
+chain3 = softmax_d(chain2)       # softmax(softmax(softmax(x_d)))
+
+weights_d = np.array([[0.1, 0.5, 0.9]], dtype=np.float32)
+chain_loss = (chain3 * Parameter(weights_d)).sum()
+
+print(f"\nx_d.grad before backward: {x_d.grad}")
+print(f"chain1.data: {chain1.data}")
+print(f"chain2.data: {chain2.data}")
+print(f"chain3.data: {chain3.data}")
+
+chain_loss.backward()
+
+print(f"\nx_d.grad after backward:  {x_d.grad}")
+
+# Manually compute expected gradient by chaining softmax jacobians
+# dx = J3.T @ (J2.T @ (J1.T @ upstream))
+# For softmax jacobian-vector product: J.T @ v = s * (v - sum(v*s))
+def softmax_jvp(s, v):
+    """Jacobian-vector product for softmax: s * (v - sum(v*s, keepdims))"""
+    return s * (v - np.sum(v * s, axis=-1, keepdims=True))
+
+s1 = chain1.data
+s2 = chain2.data
+s3 = chain3.data
+
+# Backprop step by step
+grad3 = weights_d                    # upstream into chain3 backward
+grad2 = softmax_jvp(s3, grad3)      # grad flowing into chain2
+grad1 = softmax_jvp(s2, grad2)      # grad flowing into chain1
+grad_xd = softmax_jvp(s1, grad1)    # grad flowing into x_d
+
+print(f"\nExpected x_d.grad:        {grad_xd}")
+chain_correct = np.allclose(x_d.grad, grad_xd, atol=1e-6)
+print(f"x_d gradient correct? {chain_correct}")
+
+# ======================================================================
+# STEP 13: Dependent + Independent mixed
+# out_dep = softmax(softmax(x_e))
+# out_ind = softmax(x_f)           <- independent
+# loss = weighted(out_dep) + weighted(out_ind)
+# x_e should get chained grad, x_f should get single-layer grad
+# ======================================================================
+print("\n" + "-" * 70)
+print("STEP 13: Mixed dependent + independent calls")
+print("-" * 70)
+print("out_dep = softmax(softmax(x_e))  |  out_ind = softmax(x_f)")
+print("Gradients must NOT leak between the two branches")
+
+x_e = Parameter(np.array([[1.0, 2.0, 3.0]]))
+x_f = Parameter(np.array([[0.5, 1.5, 2.5]]))
+softmax_m = Softmax()
+
+mid   = softmax_m(x_e)          # softmax(x_e)
+out_dep = softmax_m(mid)        # softmax(softmax(x_e))
+out_ind = softmax_m(x_f)        # softmax(x_f)  — independent
+
+weights_e = np.array([[0.2, 0.6, 0.8]], dtype=np.float32)
+weights_f = np.array([[0.7, 0.3, 0.5]], dtype=np.float32)
+
+mixed_loss = (out_dep * Parameter(weights_e)).sum() + \
+             (out_ind * Parameter(weights_f)).sum()
+
+mixed_loss.backward()
+
+# Expected for x_e: chain through two softmax layers
+se1 = mid.data
+se2 = out_dep.data
+grad_dep_out = weights_e
+grad_dep_mid = softmax_jvp(se2, grad_dep_out)
+expected_grad_xe = softmax_jvp(se1, grad_dep_mid)
+
+# Expected for x_f: single softmax layer
+sf = out_ind.data
+expected_grad_xf = softmax_jvp(sf, weights_f)
+
+print(f"\nx_e.grad:          {x_e.grad}")
+print(f"Expected x_e.grad: {expected_grad_xe}")
+print(f"\nx_f.grad:          {x_f.grad}")
+print(f"Expected x_f.grad: {expected_grad_xf}")
+
+xe_correct = np.allclose(x_e.grad, expected_grad_xe, atol=1e-6)
+xf_correct = np.allclose(x_f.grad, expected_grad_xf, atol=1e-6)
+print(f"\nx_e gradient correct? {xe_correct}")
+print(f"x_f gradient correct? {xf_correct}")
+
+# Also verify no leakage: x_f grad should NOT equal x_e grad
+no_leakage = not np.allclose(x_e.grad, x_f.grad)
+print(f"No gradient leakage between branches? {no_leakage}")
+
+# ======================================================================
+# FINAL SUMMARY
+# ======================================================================
 print("\n" + "=" * 70)
 all_passed = (x1_correct and x2_correct and x3_correct and
               x1b_correct and x2b_correct and x3b_correct and
-              grads_different and x1c_nonzero and x2c_zero and x3c_zero)
+              grads_different and x1c_nonzero and x2c_zero and x3c_zero and
+              chain_correct and xe_correct and xf_correct and no_leakage)
 
 if all_passed:
-    print("✓✓✓ ALL MULTIPLE CALLS TESTS PASSED! ✓✓✓")
-    print("Softmax correctly handles multiple independent calls.")
+    print("✓✓✓ ALL TESTS PASSED! ✓✓✓")
+    print("Softmax correctly handles independent, dependent, and mixed calls.")
 else:
-    print("✗✗✗ MULTIPLE CALLS TESTS FAILED! ✗✗✗")
+    print("✗✗✗ TESTS FAILED! ✗✗✗")
     if not (x1_correct and x2_correct and x3_correct):
         print("  - Basic gradients incorrect (sum loss)")
     if not (x1b_correct and x2b_correct and x3b_correct):
@@ -255,6 +365,14 @@ else:
         print("  - Isolated x1 grad is zero (should be non-zero)")
     if not x2c_zero or not x3c_zero:
         print("  - Gradient leaking between independent calls")
+    if not chain_correct:
+        print("  - Chained (dependent) gradient incorrect")
+    if not xe_correct:
+        print("  - Mixed dependent branch gradient incorrect")
+    if not xf_correct:
+        print("  - Mixed independent branch gradient incorrect")
+    if not no_leakage:
+        print("  - Gradient leaking between mixed branches")
 print("=" * 70)
 
 input("press enter ..")
