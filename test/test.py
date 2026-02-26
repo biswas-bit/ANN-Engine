@@ -75,5 +75,35 @@ print(f"out1 vs out2 different? {out1_vs_out2_diff}")
 print(f"out1 vs out3 different? {out1_vs_out3_diff}")
 print(f"out2 vs out3 different? {out2_vs_out3_diff}")
 
+print("\n" + "-" * 70)
+print("STEP 6: Create Combined Loss")
+print("-" * 70)
+loss1 = out1.sum()
+loss2 = out2.sum()
+loss3 = out3.sum()
+total_loss = loss1 + loss2 + loss3
+
+print(f"loss1 (sum of out1): {loss1.data}")
+print(f"loss2 (sum of out2): {loss2.data}")
+print(f"loss3 (sum of out3): {loss3.data}")
+print(f"total_loss: {total_loss.data}")
+
+print("\n" + "-" * 70)
+print("STEP 7: Check Gradients Before Backward")
+print("-" * 70)
+print(f"x1.grad before: {x1.grad}")
+print(f"x2.grad before: {x2.grad}")
+print(f"x3.grad before: {x3.grad}")
+
+
+print("\n" + "-" * 70)
+print("STEP 8: Backward Pass")
+print("-" * 70)
+total_loss.backward()
+    
+print(f"x1.grad after: {x1.grad}")
+print(f"x2.grad after: {x2.grad}")
+print(f"x3.grad after: {x3.grad}")
+
 
 input("press enter ..")
