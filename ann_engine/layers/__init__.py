@@ -3,7 +3,7 @@ from ann_engine.layers.activations import (
     Softmax, LogSoftmax, Softplus, Swish, GELU, Identity
 )
 
-from ann_engine.layers.dense import Dense
+from ann_engine.layers.layers import Dense
 
 __all__ = [
     'ReLU',
