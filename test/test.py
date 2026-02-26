@@ -31,4 +31,16 @@ expected1 = exp_x1 / np.sum(exp_x1)
 print(f"Expected out1: {expected1}")
 print(f"out1 correct ? {np.allclose(out1.data, expected1)}")
 
+print("\n" + "=" * 70)
+print("step 2: Forward pass - second call (x1)")
+print("=" * 70)
+
+out2 = softmax(x2)
+print(f"Out2 data:{out2.data}")
+print(f"Out2 Operation:{out2._op}")
+print(f"Out2 parents:{[id(p) for p in out2._prev]}")
+print(f"out2 id: {id(out2)}")
+
+
+
 input("press enter ..")
