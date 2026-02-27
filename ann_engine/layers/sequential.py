@@ -170,6 +170,80 @@ class Sequential:
         
         return history
     
+    def predict(self,x):
+        """ Generate Predictions """
+        if not isinstance(x, Tensor):
+            x = Tensor(x)
+        return self.forward(x)
+    
+    def evaluate(self, x, y, batch_size=32):
+        """Evaluate the model"""
+        if not isinstance(x, Tensor):
+            x = Tensor(x)
+        if not isinstance(y, Tensor):
+            y = Tensor(y)
+        
+        n_samples = x.data.shape[0]
+        total_loss = 0
+        total_metrics = [0] * len(self._metrics)
+        n_batches = 0
+        
+        for i in range(0, n_samples, batch_size):
+            end_idx = min(i + batch_size, n_samples)
+            x_batch = Tensor(x.data[i:end_idx])
+            y_batch = Tensor(y.data[i:end_idx])
+            
+            y_pred = self.forward(x_batch)
+            loss = self._loss(y_pred, y_batch)
+            total_loss += loss.data
+            
+            for j, metric_fn in enumerate(self._metrics):
+                total_metrics[j] += metric_fn(y_pred, y_batch)
+            
+            n_batches += 1
+        
+        avg_loss = total_loss / n_batches
+        avg_metrics = [m / n_batches for m in total_metrics]
+        
+        return [avg_loss] + avg_metrics
+    
+    def summary(self):
+        """Print model summary"""
+        print("\n" + "=" * 60)
+        print("Model: Sequential")
+        print("=" * 60)
+        print(f"{'Layer (type)':<30} {'Output Shape':<20} {'Param #':<10}")
+        print("-" * 60)
+        
+        total_params = 0
+        x_shape = self._input_shape if self.built else "Not built"
+        
+        for i, layer in enumerate(self.layers):
+            # Get layer info
+            layer_name = layer.__class__.__name__
+            
+            # Count parameters
+            params = 0
+            if hasattr(layer, 'W'):
+                params += layer.W.data.size
+            if hasattr(layer, 'b') and layer.b is not None:
+                params += layer.b.data.size
+            
+            total_params += params
+            
+            # Get output shape (would need forward pass to know)
+            output_shape = "?"
+            
+            print(f"{f'{i}. {layer_name}':<30} {output_shape:<20} {params:<10,}")
+        
+        print("=" * 60)
+        print(f"Total params: {total_params:,}")
+        print(f"Trainable params: {total_params:,}")
+        print(f"Non-trainable params: 0")
+        print("=" * 60)
+    
+        
+    
     
                     
                 
