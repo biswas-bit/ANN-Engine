@@ -258,6 +258,19 @@ class Sequential:
                 return loss_map[loss.lower()]()
             else:
                 raise ValueError(f"Unknown Loss: {loss}")
+            
+    def _get_metric(self, metric):
+        """ Accuracy metric """
+        if isinstance(metric, str):
+            if metric.lower() == 'accuracy':
+                return self._accuracy_metric
+            elif metric.lower() == 'mae':
+                return self._mae_metric
+            elif metric.lower() == 'mse':
+                return self._mse_metric
+            return metric
+        
+        
         
     
     
