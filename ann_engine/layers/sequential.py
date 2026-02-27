@@ -53,4 +53,6 @@ class Sequential:
             
         return x
     
+    def __call__(self,x):
+        return self.forward(x)
                
