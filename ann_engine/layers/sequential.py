@@ -242,6 +242,22 @@ class Sequential:
         print(f"Non-trainable params: 0")
         print("=" * 60)
     
+    def _get_loss(self, loss):
+        """ get loss function by name """
+        if isinstance(loss, str):
+            from ann_engine.losses.loss import MSELoss, CrossEntropyLoss, NLLLoss,BCELoss, BCEWithLogitsLoss, HuberLoss
+            loss_map = {
+                'mse':MSELoss,
+                'categorical_crossentropy':CrossEntropyLoss,
+                'nll':NLLLoss,
+                'bce':BCELoss,
+                'bce_log':BCEWithLogitsLoss,
+                'hub':HuberLoss
+            }
+            if loss.lower() in loss_map:
+                return loss_map[loss.lower()]()
+            else:
+                raise ValueError(f"Unknown Loss: {loss}")
         
     
     
