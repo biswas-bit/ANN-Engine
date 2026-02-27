@@ -4,6 +4,7 @@ from ann_engine.layers.activations import (
 )
 
 from ann_engine.layers.layers import Dense
+from ann_engine.layers.sequential import Sequential
 
 __all__ = [
     'ReLU',
@@ -17,7 +18,8 @@ __all__ = [
     'Swish',
     'GELU',
     'Identity',
-    'Dense'
+    'Dense',
+    'Sequential',
 ]
 
 __version__ = "0.1.0"
