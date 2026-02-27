@@ -270,6 +270,21 @@ class Sequential:
                 return self._mse_metric
             return metric
         
+    def _accuracy_metric(self, y_pred, y_true):
+        """ Accuracy metric """
+        if len(y_pred.data.shape) > 1 and y_pred.data.shape[1] >1:
+            pred_classes = np.argmax(y_pred.data, axis=1)
+            true_classes = np.argmax(y_true.data, axis=1)
+            return np.mean(pred_classes == true_classes)
+        else:
+            pred_binary = (y_pred.data > 0.5).astype(np.float32)
+            return np.mean(pred_binary == y_true.data)
+        
+    def _mae_metric(self, y_pred, y_true):
+        pass
+    
+    def _mse_metrix(self, y_pred, y_true):
+        pass
         
         
     
