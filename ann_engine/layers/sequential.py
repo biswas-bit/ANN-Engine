@@ -1,18 +1,19 @@
+import numpy as np
 from ann_engine.core import Tensor
 from ann_engine.layers.base import Module as LayerModule
-import numpy as np
 
 class Sequential:
     """
-    Sequential Model that stacks layer sequentially similar to tf.keras.sequential
+    Sequential model that stacks layers sequentially.
+    Similar to tf.keras.Sequential
     
     Example:
-     model = Sequential([
+        model = Sequential([
             Dense(128, activation='relu', input_shape=(784,)),
             Dense(64, activation='relu'),
             Dense(10, activation='softmax')
         ])
-    """  
+    """
     
     def __init__(self, layers=None):
         self.layers = []
@@ -24,36 +25,35 @@ class Sequential:
         if layers is not None:
             for layer in layers:
                 self.add(layer)
-                
+    
     def add(self, layer):
-        """ add layer to the model """
+        """Add a layer to the model"""
         self.layers.append(layer)
         self.built = False
-        
+    
     def build(self, input_shape):
-        """ BUild the model by initilizing all layers """
+        """Build the model by initializing all layers"""
         if self.built:
             return
         
-        x = Tensor(np.zeros((1, *input_shape[1:])))
+        x = Tensor(np.zeros((1, *input_shape[1:])))  # Dummy input
         for layer in self.layers:
             x = layer(x)
-            
+        
         self.built = True
         self._input_shape = input_shape
-        self._output_shape = x.data.shape 
-        
-    def forward(self,x):
-        """ forward pass through all layers"""
+        self._output_shape = x.data.shape
+    
+    def forward(self, x):
+        """Forward pass through all layers"""
         if not self.built:
             self.build(x.data.shape)
-            
+        
         for layer in self.layers:
             x = layer(x)
-            
         return x
     
-    def __call__(self,x):
+    def __call__(self, x):
         return self.forward(x)
     
     def compile(self, optimizer, loss, metrics=None):
@@ -65,13 +65,12 @@ class Sequential:
             loss: Loss function (e.g., 'mse', 'categorical_crossentropy')
             metrics: List of metrics to track (e.g., ['accuracy'])
         """
-        
-        self. _optimizer = optimizer
+        self._optimizer = optimizer
         self._loss = self._get_loss(loss)
         
-        if metrics :
-            self._metrics  = [self._get_metric(m) for m in metrics]
-            
+        if metrics:
+            self._metrics = [self._get_metric(m) for m in metrics]
+    
     def fit(self, x, y, batch_size=32, epochs=10, validation_split=0.2, verbose=1):
         """
         Train the model
@@ -170,8 +169,8 @@ class Sequential:
         
         return history
     
-    def predict(self,x):
-        """ Generate Predictions """
+    def predict(self, x):
+        """Generate predictions"""
         if not isinstance(x, Tensor):
             x = Tensor(x)
         return self.forward(x)
@@ -243,24 +242,28 @@ class Sequential:
         print("=" * 60)
     
     def _get_loss(self, loss):
-        """ get loss function by name """
+        """Get loss function by name"""
         if isinstance(loss, str):
-            from ann_engine.losses.loss import MSELoss, CrossEntropyLoss, NLLLoss,BCELoss, BCEWithLogitsLoss, HuberLoss
+            from ann_engine.losses import MSELoss, BCELoss, CrossEntropyLoss, NLLLoss,  BCEWithLogitsLoss, HuberLoss
             loss_map = {
-                'mse':MSELoss,
-                'categorical_crossentropy':CrossEntropyLoss,
+                'mse': MSELoss,
+                'mean_squared_error': MSELoss,
+                'bce': BCELoss,
+                'binary_crossentropy': BCELoss,
+                'categorical_crossentropy': CrossEntropyLoss,
+                'cross_entropy': CrossEntropyLoss,
+                'bce_log': BCEWithLogitsLoss,
                 'nll':NLLLoss,
-                'bce':BCELoss,
-                'bce_log':BCEWithLogitsLoss,
-                'hub':HuberLoss
+                'huber':HuberLoss,
             }
             if loss.lower() in loss_map:
                 return loss_map[loss.lower()]()
             else:
-                raise ValueError(f"Unknown Loss: {loss}")
-            
+                raise ValueError(f"Unknown loss: {loss}")
+        return loss
+    
     def _get_metric(self, metric):
-        """ Accuracy metric """
+        """Get metric function by name"""
         if isinstance(metric, str):
             if metric.lower() == 'accuracy':
                 return self._accuracy_metric
@@ -268,31 +271,24 @@ class Sequential:
                 return self._mae_metric
             elif metric.lower() == 'mse':
                 return self._mse_metric
-            return metric
-        
+        return metric
+    
     def _accuracy_metric(self, y_pred, y_true):
-        """ Accuracy metric """
-        if len(y_pred.data.shape) > 1 and y_pred.data.shape[1] >1:
+        """Accuracy metric"""
+        if len(y_pred.data.shape) > 1 and y_pred.data.shape[1] > 1:
+            # Multi-class
             pred_classes = np.argmax(y_pred.data, axis=1)
             true_classes = np.argmax(y_true.data, axis=1)
             return np.mean(pred_classes == true_classes)
         else:
+            # Binary
             pred_binary = (y_pred.data > 0.5).astype(np.float32)
             return np.mean(pred_binary == y_true.data)
-        
+    
     def _mae_metric(self, y_pred, y_true):
-        "mean absolute error metrix"
+        """Mean Absolute Error metric"""
         return np.mean(np.abs(y_pred.data - y_true.data))
     
-    def _mse_metrix(self, y_pred, y_true):
-        "mean Squared error"
-        return np.mean(np.sqrt(y_pred.data - y_true.data))
-        
-        
-    
-    
-                    
-                
-               
-        
-        
+    def _mse_metric(self, y_pred, y_true):
+        """Mean Squared Error metric"""
+        return np.mean((y_pred.data - y_true.data) ** 2)
