@@ -232,6 +232,80 @@ class Tensor:
     def zero_grad(self):
         """Reset gradients to zero."""
         self.grad = np.zeros_like(self.data)
+        
+    
+    def log(self):
+        """
+        Natural logarithm (base e) of tensor elements
+        """
+        out = Tensor(np.log(self.data), (self,), 'log')
+        
+        def _backward():
+            self.grad += out.grad / self.data
+            
+        out._backward = _backward
+        return out
+    
+    def exp(self):
+        """
+        Exponential of tensor elements
+        """
+        out = Tensor(np.exp(self.data), (self,), 'exp')
+        
+        def _backward():
+            self.grad += out.grad * out.data
+            
+        out._backward = _backward
+        return out
+    
+    def __neg__(self):
+        """
+        Negation operator: -tensor
+        """
+        return self * -1
+    
+    def __abs__(self):
+        """
+        Absolute value
+        """
+        out = Tensor(np.abs(self.data), (self,), 'abs')
+        
+        def _backward():
+            self.grad += out.grad * np.sign(self.data)
+            
+        out._backward = _backward
+        return out
+    
+    def __gt__(self, other):
+        """Greater than comparison (for masking)"""
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return self.data > other.data
+    
+    def __lt__(self, other):
+        """Less than comparison (for masking)"""
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return self.data < other.data
+    
+    def sqrt(self):
+        """Square root"""
+        out = Tensor(np.sqrt(self.data), (self,), 'sqrt')
+        
+        def _backward():
+            self.grad += out.grad * (0.5 / out.data)
+            
+        out._backward = _backward
+        return out
+    
+    def square(self):
+        """Square of elements"""
+        return self ** 2
+    
+    def clip(self, min_val=None, max_val=None):
+        """Clip values to a range"""
+        clipped = np.clip(self.data, min_val, max_val)
+        return Tensor(clipped, (self,), 'clip')
 
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad})"
