@@ -41,4 +41,16 @@ class Sequential:
             
         self.built = True
         self._input_shape = input_shape
-        self._output_shape = x.data.shape            
+        self._output_shape = x.data.shape 
+        
+    def forward(self,x):
+        """ forward pass through all layers"""
+        if not self.built:
+            self.build(x.data.shape)
+            
+        for layer in self.layers:
+            x = layer(x)
+            
+        return x
+    
+               
