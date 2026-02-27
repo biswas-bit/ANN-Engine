@@ -285,7 +285,8 @@ class Sequential:
         return np.mean(np.abs(y_pred.data - y_true.data))
     
     def _mse_metrix(self, y_pred, y_true):
-        pass
+        "mean Squared error"
+        return np.mean(np.sqrt(y_pred.data - y_true.data))
         
         
     
