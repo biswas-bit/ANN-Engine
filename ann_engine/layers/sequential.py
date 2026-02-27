@@ -281,7 +281,8 @@ class Sequential:
             return np.mean(pred_binary == y_true.data)
         
     def _mae_metric(self, y_pred, y_true):
-        pass
+        "mean absolute error metrix"
+        return np.mean(np.abs(y_pred.data - y_true.data))
     
     def _mse_metrix(self, y_pred, y_true):
         pass
