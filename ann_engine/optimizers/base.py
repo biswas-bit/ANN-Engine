@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
 
 class Optimizer:
-    def __init__(self, parameters, lr=0.01):
-        self.parameters = parameters
+    def __init__(self, lr=0.01):
+        self.parameters = None
         self.lr = lr
+        
+    def set_parameters(self, parameters):
+        """ set the Parameters to optimize called by model.compile """
+        self.parameters = parameters
         
     @abstractmethod
     def step(self):
