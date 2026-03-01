@@ -37,48 +37,62 @@ class MSELoss(Loss):
             raise ValueError(f"Invalid reduction type: {self.reduction}")
 
 class CrossEntropyLoss(Loss):
-    """Cross Entropy Loss for classification"""
-    
-    def __init__(self, reduction='mean', epsilon=1e-12):
+    """
+    Categorical Cross-Entropy Loss.
+
+    Supports:
+        - One-hot encoded labels  : y_true shape (batch, num_classes)
+        - Sparse integer labels   : y_true shape (batch,) or (batch, 1)
+
+    IMPORTANT: uses Tensor ops throughout so gradients flow back
+    through y_pred correctly. Raw numpy ops would orphan the loss
+    tensor from the computation graph and produce zero gradients.
+    """
+
+    def __init__(self, reduction='mean', epsilon=1e-8):
         super().__init__(reduction)
         self.epsilon = epsilon
-    
+
     def forward(self, y_pred, y_true):
         """
-        Compute cross entropy loss: -sum(y_true * log(y_pred))
-        
         Args:
-            y_pred: Tensor of predictions (probabilities, should sum to 1)
-            y_true: Tensor of targets (one-hot encoded or class indices)
-        
+            y_pred : Tensor, shape (batch_size, num_classes)
+                     — softmax probabilities output by the model
+            y_true : Tensor or array, one-hot (batch, classes)
+                     or sparse integer labels (batch,)
+
         Returns:
-            Tensor loss value
+            Scalar Tensor loss value
         """
-        # Ensure y_true is a Tensor
         if not isinstance(y_true, Tensor):
             y_true = Tensor(y_true)
+
+        # ── Convert sparse labels → one-hot ──────────────────────────
+        if y_true.data.ndim == 1 or (
+            y_true.data.ndim == 2 and y_true.data.shape[1] == 1
+        ):
+            batch_size  = y_pred.data.shape[0]
+            num_classes = y_pred.data.shape[1]
+            indices     = y_true.data.astype(int).flatten()
+            one_hot     = np.zeros((batch_size, num_classes), dtype=np.float32)
+            one_hot[np.arange(batch_size), indices] = 1.0
+            y_true = Tensor(one_hot)   # plain Tensor, no grad needed for labels
+
+       
+        clipped = y_pred.clip(self.epsilon, 1.0 - self.epsilon)
+
+       
+        log_pred = clipped.log()
+
         
-        # Add small epsilon to avoid log(0)
-        y_pred_clipped = y_pred.__class__(np.clip(y_pred.data, self.epsilon, 1 - self.epsilon))
-        
-        # Compute cross entropy
-        if len(y_true.data.shape) == 1 or (len(y_true.data.shape) == 2 and y_true.data.shape[1] == 1):
-            # Sparse labels (class indices)
-            batch_size = len(y_pred.data)
-            indices = y_true.data.astype(int).flatten()
-            
-            # Get the predicted probabilities for the true classes
-            selected_probs = y_pred_clipped.data[np.arange(batch_size), indices]
-            loss = -np.log(selected_probs)
-            loss_tensor = Tensor(loss)
-        else:
-            # One-hot encoded labels
-            # Use numpy log instead of tensor method to avoid the missing method
-            loss = -np.sum(y_true.data * np.log(y_pred_clipped.data), axis=1)
-            loss_tensor = Tensor(loss)
-        
-        # Apply reduction
-        return self._reduce(loss_tensor)
+        per_element = y_true * log_pred         
+        total       = per_element.sum()          
+        batch_size  = float(y_pred.data.shape[0])
+
+        # Negate and average over batch
+        loss = total * (-1.0 / batch_size)
+
+        return loss
 
 
 class NLLLoss(Loss):
