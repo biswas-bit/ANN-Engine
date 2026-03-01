@@ -6,34 +6,29 @@ class Dense(BaseDense):
     """
     Dense layer with built-in activation and optional input_shape.
 
-    When input_shape is omitted (the common case in a Sequential stack),
-    in_features is left as 0 and the parent Dense will lazily initialize
-    weights on the very first forward pass.
+    input_shape is optional — when omitted, in_features is inferred
+    lazily from the first input tensor (Keras-style).
 
     Example:
-        # Explicit input shape on first layer only:
-        Dense(128, activation='relu', input_shape=(784,))
-
-        # All subsequent layers — no input_shape needed:
-        Dense(64, activation='relu')
-        Dense(10, activation='softmax')
+        Dense(128, activation='relu', input_shape=(784,))  # first layer
+        Dense(64,  activation='relu')                      # subsequent layers
+        Dense(10,  activation='softmax')
     """
 
     def __init__(self, units, activation=None, use_bias=True,
                  input_shape=None, **kwargs):
 
-        self.units = units
+        self.units           = units
         self.activation_name = activation
 
-        # Resolve in_features from input_shape (may remain 0 → lazy init)
+        # Resolve in_features from input_shape — 0 means lazy init
         if input_shape is not None:
             if isinstance(input_shape, (tuple, list)):
-                # (784,) → 784  |  (None, 784) → 784
                 in_features = input_shape[-1]
             else:
                 in_features = int(input_shape)
         else:
-            in_features = 0          # triggers lazy init in BaseDense
+            in_features = 0
 
         super().__init__(in_features, units, bias=use_bias, **kwargs)
 
@@ -42,7 +37,6 @@ class Dense(BaseDense):
     # ------------------------------------------------------------------
 
     def _get_activation(self, name):
-        """Map activation name → activation module."""
         if name is None or name == 'linear':
             return None
         activations = {
@@ -54,20 +48,22 @@ class Dense(BaseDense):
             'elu':        lambda: ELU(alpha=1.0),
         }
         if name not in activations:
-            raise ValueError(f"Unknown activation: '{name}'. "
-                             f"Choose from {list(activations.keys())}")
+            raise ValueError(
+                f"Unknown activation: '{name}'. "
+                f"Choose from {list(activations.keys())}"
+            )
         return activations[name]()
 
     # ------------------------------------------------------------------
 
     def forward(self, x):
-        # BaseDense.forward handles lazy init + matmul + bias
-        x = super().forward(x)
+        x = super().forward(x)           # BaseDense: lazy init + matmul + bias
         if self.activation is not None:
             x = self.activation(x)
         return x
 
     # ------------------------------------------------------------------
+    # parameters() is inherited from BaseDense — no override needed
 
     def __repr__(self):
         return (
