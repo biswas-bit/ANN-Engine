@@ -5,25 +5,24 @@ from ann_engine.layers.base import Module
 
 
 class Dense(Module):
-    """Fully Connected layer
-    y = xW + b
+    """
+    Fully Connected layer:  out = x @ W + b
 
-    Supports lazy initialization: if in_features is 0 or None,
+    Supports lazy initialization — if in_features is 0 or None,
     weights are created automatically on the first forward pass.
     """
 
     def __init__(self, in_features, out_features, bias=True, initialization='xavier'):
         super().__init__()
 
-        self.in_features = in_features  # may be 0/None → lazy init
-        self.out_features = out_features
+        self.in_features    = in_features
+        self.out_features   = out_features
         self.initialization = initialization
-        self.use_bias = bias
+        self.use_bias       = bias
 
         self.W = None
         self.b = None
 
-        # Only initialize weights immediately if in_features is known
         if in_features:
             self._initialize_weights(in_features)
 
@@ -32,7 +31,6 @@ class Dense(Module):
     # ------------------------------------------------------------------
 
     def _initialize_weights(self, in_features):
-        """Create W and b given a concrete in_features value."""
         self.in_features = in_features
 
         if self.initialization == 'xavier':
@@ -47,58 +45,52 @@ class Dense(Module):
             limit = 1 / np.sqrt(in_features)
             weight_data = np.random.uniform(-limit, limit, (in_features, self.out_features))
         else:
-            raise ValueError(f"Unknown initialization method: {self.initialization}")
+            raise ValueError(f"Unknown initialization: '{self.initialization}'")
 
         self.W = Parameter(weight_data)
-
-        if self.use_bias:
-            self.b = Parameter(np.zeros((1, self.out_features)))
-        else:
-            self.b = None
+        self.b = Parameter(np.zeros((1, self.out_features))) if self.use_bias else None
 
     # ------------------------------------------------------------------
-    # Forward pass
+    # Forward
     # ------------------------------------------------------------------
 
     def forward(self, x):
-        """
-        Forward pass.
+        if not isinstance(x, Tensor):
+            x = Tensor(x)
 
-        Args:
-            x: Tensor of shape (batch_size, in_features) or (in_features,)
-
-        Returns:
-            Tensor of shape (batch_size, out_features)
-        """
-        # Handle single-sample 1-D input
-        if len(x.data.shape) == 1:
+        if x.data.ndim == 1:
             x = x.reshape(1, -1)
 
-        # ── Lazy initialization ──────────────────────────────────────
+        # Lazy init on first real input
         if self.W is None:
             self._initialize_weights(x.data.shape[1])
 
-        # ── Shape validation ─────────────────────────────────────────
         if x.data.shape[1] != self.in_features:
             raise ValueError(
-                f"Expected input with {self.in_features} features, "
-                f"but got {x.data.shape[1]} features"
+                f"Expected {self.in_features} input features, "
+                f"got {x.data.shape[1]}"
             )
 
-        # Matrix multiplication: (batch_size, in_features) @ (in_features, out_features)
         out = x @ self.W
-
         if self.b is not None:
             out = out + self.b
-
         return out
 
-    
+    # ------------------------------------------------------------------
+    # Parameters — explicit override so optimizer always finds W and b
+    # ------------------------------------------------------------------
+
+    def parameters(self):
+        """Return [W, b] — only those that have been initialized."""
+        params = []
+        if self.W is not None:
+            params.append(self.W)
+        if self.b is not None:
+            params.append(self.b)
+        return params
 
     def __repr__(self):
         return (
-            f"Dense(in_features={self.in_features}, "
-            f"out_features={self.out_features}, "
-            f"bias={self.use_bias}, "
-            f"init={self.initialization})"
+            f"Dense(in={self.in_features}, out={self.out_features}, "
+            f"bias={self.use_bias}, init={self.initialization})"
         )
