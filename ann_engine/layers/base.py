@@ -45,3 +45,9 @@ class Module(ABC):
             if isinstance(obj, Module):
                 children.append(obj)
         return children
+    
+    def parameters(self):
+        params = list(self._parameters.values())
+        for module in self._modules.values():
+            params.extend(module.parameters())
+        return params
