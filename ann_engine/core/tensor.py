@@ -36,13 +36,19 @@ class Tensor:
             saved_self = self
             saved_axis = axis
             saved_keepdims = keepdims
+            saved_orig_ndim = self.data.ndim  # For handling negative axis
+            saved_out_shape = out.data.shape   # For expand_shape base
             def _backward():
                 grad = out.grad / saved_self.data.shape[saved_axis]
-                expand_shape = list(saved_self.data.shape)
+                expand_shape = list(saved_out_shape)
+                # Compute effective axis position (handle negative axis)
+                effective_axis = saved_axis if saved_axis >= 0 else saved_orig_ndim + saved_axis
                 if not saved_keepdims:
-                    insert_at = saved_axis if saved_axis >= 0 else len(expand_shape)
+                    # Insert singleton at the reduced axis position
+                    insert_at = effective_axis
                     expand_shape.insert(insert_at, 1)
-                grad = grad.reshape(expand_shape)
+                    grad = grad.reshape(expand_shape)
+                # Broadcast to original shape (handles both keepdims cases)
                 saved_self.grad += np.broadcast_to(grad, saved_self.data.shape)
             out._backward = _backward
             return out
