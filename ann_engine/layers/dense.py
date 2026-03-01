@@ -93,18 +93,7 @@ class Dense(Module):
 
         return out
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    def parameters(self):
-        """Return list of trainable parameters (only those initialized)."""
-        params = []
-        if self.W is not None:
-            params.append(self.W)
-        if self.b is not None:
-            params.append(self.b)
-        return params
+    
 
     def __repr__(self):
         return (
