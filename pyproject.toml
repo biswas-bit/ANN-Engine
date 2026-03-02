@@ -39,6 +39,8 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["ann_engine*"]
+exclude = ["venv", "*.egg-info", ".git", "dist", "build", "*.pyc", "__pycache__"]
 
 [project.urls]
 Homepage = "https://github.com/biswas-bit"
