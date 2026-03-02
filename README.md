@@ -1,8 +1,13 @@
 # ANN Engine – A Minimal Neural Network Training Framework from Scratch
 
 <p align="center">
- <img src="ann_engine.png" alt="Missing Value Count Plot" width="600">
+ <img src="ann_engine.png" alt="ANN Engine" width="600">
  </p>
+
+[![PyPI Version](https://img.shields.io/pypi/v/ann-engine)](https://pypi.org/project/ann-engine/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/ann-engine)](https://pypi.org/project/ann-engine/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://pepy.tech/badge/ann-engine)](https://pepy.tech/project/ann-engine)
 
 ## OverView
 
