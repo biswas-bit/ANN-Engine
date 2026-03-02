@@ -7,7 +7,6 @@ name = "ann-engine"
 version = "0.1.0"
 description = "Neural Network framework built from scratch using NumPy"
 readme = "README.md"
-long_description_content_type = "text/markdown"
 authors = [
   { name="Biswas pokhrel", email = "pokhrelbiswas53@gmail.com" }
 ]
