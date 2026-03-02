@@ -1,6 +1,6 @@
 import numpy as np
 
-class Datasets:
+class MakeSPirals:
     def __init__(self, n=1000, n_classes=3, noise=0.4):
         self.__n = n  
         self.__n_classes = n_classes  
