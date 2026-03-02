@@ -11,7 +11,7 @@ long_description_content_type = "text/markdown"
 authors = [
   { name="Biswas pokhrel", email = "pokhrelbiswas53@gmail.com" }
 ]
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 keywords = ["neural-network", "deep-learning", "numpy", "machine-learning", "ann"]
 classifiers = [
     "Development Status :: 3 - Alpha",
