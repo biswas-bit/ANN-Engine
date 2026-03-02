@@ -1,17 +1,48 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ann-engine"
 version = "0.1.0"
 description = "Neural Network framework built from scratch using NumPy"
+readme = "README.md"
+long_description_content_type = "text/markdown"
 authors = [
-  { name="Biswas pokhrel" }
+  { name="Biswas pokhrel", email = "pokhrelbiswas53@gmail.com" }
+]
+license = { text = "MIT" }
+keywords = ["neural-network", "deep-learning", "numpy", "machine-learning", "ann"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Education",
 ]
 dependencies = [
-  "numpy"
+  "numpy>=1.20.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[project.urls]
+Homepage = "https://github.com/biswas-bit"
+Documentation = "https://ann-engine.readthedocs.io"
+Repository = "https://github.com/biswas-bit/ANN-Engine"
+Issues = "https://github.com/biswas-bit/ANN-Engine/issues"
