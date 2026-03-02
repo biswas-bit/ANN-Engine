@@ -1,5 +1,5 @@
-from ann_engine.datasets.dataset import MakeSPirals
+from ann_engine.datasets.datasets import Datasets
 
 __all__ = [
-    MakeSPirals
+    Datasets
 ]
