@@ -73,8 +73,7 @@ cd ann_engine
 pip install -e .
 ```
 
-### Using pip (if published)
-
+### Using pip 
 ```
 bash
 pip install ann-engine
