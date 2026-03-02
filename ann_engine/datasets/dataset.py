@@ -11,11 +11,11 @@ class MakeSPirals:
     def make_spiral(self):
         per_class = self.__n // self.__n_classes
         for c in range(self.__n_classes):
-            # Fixed: np.linspace, not np.linespace
+            
             t = np.linspace(0, 1, per_class)
             angle = t * 4 * np.pi + (2 * np.pi * c / self.__n_classes)
             r = t
-            # Fixed: noise scaling - multiplied by noise parameter
+
             x1 = r * np.cos(angle) + np.random.randn(per_class) * self.__noise
             x2 = r * np.sin(angle) + np.random.randn(per_class) * self.__noise
             self.__x.append(np.column_stack([x1, x2]))
