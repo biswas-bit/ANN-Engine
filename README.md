@@ -33,60 +33,46 @@ The goal is to bridge the gap between theory and production frameworks.
 
 ## Folder Structure
 
-```python 
-ann-engine/
+```
+ann_engine/
+├── __init__.py
 │
-├── README.md
-├── pyproject.toml        
-├── requirements.txt
-│
-├── ann_engine/             # Core library 
+├── core/
 │   ├── __init__.py
+│   ├── parameter.py
+│   └── tensor.py
 │
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── parameter.py    # Trainable weights & gradients
-│   │   └── tensor.py       
+├── datasets/
+│   ├── __init__.py
+│   ├── base.py
+│   └── datasets.py
 │
-│   ├── layers/
-│   │   ├── __init__.py
-│   │   ├── base.py         # Layer abstract class
-│   │   ├── dense.py
-│   │   └── activations.py  # ReLU, Sigmoid, Softmax
+├── engine/
+│   ├── __init__.py
+│   └── models.py
 │
-│   ├── losses/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── mse.py
-│   │   └── cross_entropy.py
+├── layers/
+│   ├── __init__.py
+│   ├── activations.py
+│   ├── base.py
+│   ├── dense.py
+│   ├── layers.py
+│   └── sequential.py
 │
-│   ├── optimizers/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── sgd.py
-│   │   └── adam.py
+├── losses/
+│   ├── __init__.py
+│   ├── base.py
+│   └── loss.py
 │
-│   ├── engine/
-│   │   ├── __init__.py
-│   │   ├── model.py        # Sequential-like container
-│   │   └── trainer.py      # Training loop
+├── optimizers/
+│   ├── __init__.py
+│   ├── adagrad.py
+│   ├── adam.py
+│   ├── base.py
+│   ├── nag.py
+│   ├── rsmprop.py
+│   └── sgd.py
 │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── initializers.py
-│   │   ├── metrics.py
-│   │   └── checks.py       # Gradient checking (later)
-│
-│   └── exceptions.py       # Custom framework errors
-│
-├── examples/
-│   ├── binary_classification.py
-│   ├── multiclass_classification.py
-│   └── regression.py
-│
-├── tests/                 
-    ├── test_dense.py
-    ├── test_losses.py
-    └── test_optimizers.py
-
+└── utils/
+    └── __init__.py
 ```
