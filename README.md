@@ -78,7 +78,7 @@ from ann_engine.optimizers import Adam
 
 # Create a simple neural network
 model = Sequential([
-    Dense(128, activation='relu', input_dim=784),
+    Dense(128, activation='relu', input_shape=784),
     Dense(64, activation='relu'),
     Dense(10, activation='softmax')
 ])
@@ -154,7 +154,7 @@ from ann_engine.layers import Sequential, Dense, ReLU, Softmax
 
 # Create a sequential model
 model = Sequential([
-    Dense(256, activation='relu', input_dim=784),
+    Dense(256, activation='relu', input_shape=784),
     Dense(128, activation='relu'),
     Dense(10, activation='softmax')
 ])
@@ -226,7 +226,7 @@ model.fit(
     X_train, y_train,
     epochs=20,
     batch_size=64,
-    validation_data=(X_val, y_val)
+    
 )
 
 # Training with verbose output
@@ -286,7 +286,7 @@ X_test = X_test / 255.0
 
 # Create model
 model = Sequential([
-    Dense(256, activation='relu', input_dim=784),
+    Dense(256, activation='relu', input_shape=784),
     Dense(128, activation='relu'),
     Dense(10, activation='softmax')
 ])
@@ -294,7 +294,7 @@ model = Sequential([
 # Compile and train
 model.compile(
     loss='cross_entropy',
-    optimizer=Adam(learning_rate=0.001)
+    optimizer=Adam(lr=0.001)
 )
 
 model.fit(X_train, y_train, epochs=10, batch_size=128, verbose=1)
@@ -314,14 +314,14 @@ from ann_engine.optimizers import Adam
 
 # Create model for binary classification
 model = Sequential([
-    Dense(64, activation='relu', input_dim=20),
+    Dense(64, activation='relu', input_shape=20),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
 
 model.compile(
     loss='bce',  # Binary Cross Entropy
-    optimizer=Adam(learning_rate=0.001)
+    optimizer=Adam(lr=0.001)
 )
 
 model.fit(X_train, y_train, epochs=50, batch_size=32)
@@ -340,14 +340,14 @@ from ann_engine.optimizers import SGD
 
 # Create model for regression
 model = Sequential([
-    Dense(128, activation='relu', input_dim=13),
+    Dense(128, activation='relu', input_shape=13),
     Dense(64, activation='relu'),
     Dense(1, activation='identity')  # No activation for regression
 ])
 
 model.compile(
     loss='mse',  # or 'huber' for Huber loss
-    optimizer=SGD(learning_rate=0.01, momentum=0.9)
+    optimizer=SGD(lr=0.01, momentum=0.9)
 )
 
 model.fit(X_train, y_train, epochs=100, batch_size=32)
