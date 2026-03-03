@@ -1,10 +1,10 @@
-from ann_engine.layers.activations import (
+from .activations import (
     ReLU, Sigmoid, Tanh, LeakyReLU, ELU,
     Softmax, LogSoftmax, Softplus, Swish, GELU, Identity
 )
 
-from ann_engine.layers.layers import Dense
-from ann_engine.layers.sequential import Sequential
+from .layers import Dense
+from .sequential import Sequential
 
 __all__ = [
     'ReLU',
