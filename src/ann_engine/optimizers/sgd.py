@@ -1,5 +1,5 @@
 import numpy as np
-from ann_engine.optimizers.base import Optimizer
+from .base import Optimizer
 
 class SGD(Optimizer):
     def __init__(self, parameters, lr=0.01):

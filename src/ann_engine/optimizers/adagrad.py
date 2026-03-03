@@ -1,5 +1,5 @@
 import numpy as np
-from ann_engine.optimizers.base import Optimizer
+from .base import Optimizer
 
 class AdaGrad(Optimizer):
     def __init__(self, parameters, lr=0.01, epsilon=1e-8, weight_decay=0, clip_grad=None):

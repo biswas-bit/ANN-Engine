@@ -1,5 +1,5 @@
 import numpy as np
-from ann_engine.optimizers.base import Optimizer
+from .base import Optimizer
 
 class RMSProp(Optimizer):
     def __init__(self, parameters, lr=0.01, beta=0.9, epsilon=1e-5):

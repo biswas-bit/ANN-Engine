@@ -1,11 +1,11 @@
-from ann_engine.losses.loss import *
+from .loss import *
 
 __all__ = [
-    ' MSELoss',
+    'MSELoss',
     'CrossEntropyLoss',
     'NLLLoss',
     'BCELoss',
     'BCEWithLogitsLoss',
     'HuberLoss'
-] 
+]
 
