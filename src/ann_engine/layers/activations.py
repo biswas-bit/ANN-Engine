@@ -1,6 +1,6 @@
 import numpy as np
-from ann_engine.core.tensor import Tensor
-from ann_engine.layers.base import Module
+from ..core.tensor import Tensor
+from .base import Module
 
 class ReLU(Module):
     """
