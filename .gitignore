@@ -3,3 +3,4 @@ ann_engine.egg-info/
 __pycache__/
 
 .pypicr
+dist/
